@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CreateLinkInput, ILinkService, Link, UpdateLinkInput } from '../types';
-import { mockLinkService } from '../api/services/mockLinkService';
+import { httpLinkService } from '../api/services/httpLinkService';
 
-export const useLinks = (linkService: ILinkService = mockLinkService) => {
+export const useLinks = (linkService: ILinkService = httpLinkService) => {
   const [links, setLinks] = useState<Link[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');

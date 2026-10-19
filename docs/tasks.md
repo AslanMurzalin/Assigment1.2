@@ -227,45 +227,45 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
 
 > **Goal**: Transition the React application from `MockService` to real API communication with the FastAPI backend and verify end-to-end functionality.
 
-- [ ] **Task 5.1: Real Frontend HTTP Client**
+- [x] **Task 5.1: Real Frontend HTTP Client**
   - Configure `src/api/client.ts` with base URL from `import.meta.env.VITE_API_URL`.
   - Add request interceptor injecting `Authorization: Bearer <token>`.
   - Add response interceptor handling `401 Unauthorized` (clearing session and navigating to `/login`).
   - *Acceptance Criteria*: Client transmits tokens and handles network/auth errors gracefully.
 
-- [ ] **Task 5.2: Production HTTP Services**
+- [x] **Task 5.2: Production HTTP Services**
   - Implement `HttpAuthService` calling `/api/v1/auth/signup`, `/login`, `/me`.
   - Implement `HttpLinkService` calling `/api/v1/links` and `/api/v1/links/{id}/download`.
   - Swap mock implementations for HTTP services in application entry point / providers.
   - *Acceptance Criteria*: Frontend triggers network calls to backend instead of `localStorage`.
 
-- [ ] **Task 5.3: Environment & CORS Configuration**
+- [x] **Task 5.3: Environment & CORS Configuration**
   - Add `.env.development` with `VITE_API_URL=http://localhost:8000`.
   - Configure FastAPI CORS middleware to accept requests from frontend origin (`http://localhost:5173`).
   - *Acceptance Criteria*: Browser requests execute without CORS violations.
 
-- [ ] **Task 5.4: Authentication End-to-End Verification**
+- [x] **Task 5.4: Authentication End-to-End Verification**
   - Test registration of a new account from the UI.
   - Test login, JWT storage, and automatic profile hydration on refresh.
   - Test logout.
   - *Acceptance Criteria*: Full user auth flow functions seamlessly.
 
-- [ ] **Task 5.5: Link Management End-to-End Verification**
+- [x] **Task 5.5: Link Management End-to-End Verification**
   - Submit YouTube URL (verify auto-extracted title).
   - Submit generic URL (verify standard metadata).
   - Edit notes and tags, confirming persistent updates in SQLite and relational `link_tags`.
   - *Acceptance Criteria*: All submitted links persist in backend SQLite and display correctly in UI.
 
-- [ ] **Task 5.6: Search & Tag Filter Verification**
+- [x] **Task 5.6: Search & Tag Filter Verification**
   - Verify live search by query string and tag filters against the FastAPI backend with database joins.
   - *Acceptance Criteria*: Filtered results return correctly from server to client.
 
-- [ ] **Task 5.7: Video Streaming End-to-End Verification**
+- [x] **Task 5.7: Video Streaming End-to-End Verification**
   - Click "Download" on a saved YouTube link.
   - Verify that the browser receives the video stream and downloads the file to the user's local disk.
   - *Acceptance Criteria*: Video downloads to device with zero server-side file retention.
 
-- [ ] **Task 5.8: Smoke Testing & Setup Documentation**
+- [x] **Task 5.8: Smoke Testing & Setup Documentation**
   - Perform a complete smoke test run from registration to video streaming.
   - Write a clear `README.md` documenting setup, environment variables, and startup commands for both Frontend and Backend.
   - *Acceptance Criteria*: The complete solution can be started cleanly from documentation instructions.

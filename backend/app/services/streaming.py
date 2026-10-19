@@ -1,16 +1,25 @@
 import asyncio
 import subprocess
+import shutil
+import sys
+import os
 from typing import AsyncGenerator
 import re
+
+def get_ytdlp_bin() -> str:
+    venv_bin = os.path.join(os.path.dirname(sys.executable), "yt-dlp.exe" if sys.platform == "win32" else "yt-dlp")
+    if os.path.exists(venv_bin):
+        return venv_bin
+    return shutil.which("yt-dlp") or "yt-dlp"
 
 async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     """
     Directly streams 720p YouTube video to client via yt-dlp stdout pipe.
     Zero permanent files are stored on server disk.
     """
-    # yt-dlp command to stream best video format up to 720p directly to stdout
+    ytdlp_bin = get_ytdlp_bin()
     cmd = [
-        "yt-dlp",
+        ytdlp_bin,
         "--no-playlist",
         "-f", "best[height<=720]/best",
         "-o", "-",

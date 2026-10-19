@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { IAuthService, User } from '../types';
-import { mockAuthService } from '../api/services/mockAuthService';
+import { httpAuthService } from '../api/services/httpAuthService';
 
 interface AuthContextType {
   user: User | null;
@@ -21,13 +21,20 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
-  authService = mockAuthService,
+  authService = httpAuthService,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setToken(null);
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+
     const initAuth = async () => {
       try {
         const currentUser = await authService.getCurrentUser();
@@ -35,6 +42,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         if (currentUser && storedToken) {
           setUser(currentUser);
           setToken(storedToken);
+        } else {
+          setUser(null);
+          setToken(null);
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
@@ -43,6 +53,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       }
     };
     initAuth();
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
   }, [authService]);
 
   const login = async (email: string, password: string) => {
