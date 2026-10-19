@@ -1,0 +1,158 @@
+# AGENTS.md — Agent Operating Guide & Project Memory
+
+This document is the **primary instruction manual and operational memory** for any AI agent working on the **Link Saver** repository. Every agent must consult this file before undertaking any work and must adhere to the rules and conventions defined herein.
+
+---
+
+## 1. Living Document Mandate (CRITICAL)
+
+> **MANDATORY FOR ALL AGENTS**:
+> Whenever you make significant architectural decisions, encounter new system constraints, discover environment-specific quirks, add new dependencies, or establish new conventions:
+> **YOU MUST UPDATE THIS `AGENTS.md` FILE IMMEDIATELY.**
+> Keep this document up to date so that subsequent agents have full context and never repeat past mistakes or breach project constraints.
+
+---
+
+## 2. Project Mission & Technology Stack
+
+**Link Saver (v1)** is a responsive web application for saving, organizing, and exploring links with automated metadata extraction and specialized on-demand video streaming.
+
+- **Frontend**: React 18/19, TypeScript, Vite, Tailwind CSS.
+- **Backend**: FastAPI (Python 3.10+), Pydantic v2, Uvicorn.
+- **Database & ORM**: SQLite (`app.db`), SQLAlchemy (relational $M:N$ model).
+- **Video & Metadata**: `yt-dlp` (direct streaming for 720p YouTube videos), `httpx` + `BeautifulSoup4` (generic OpenGraph / HTML metadata extraction).
+- **Authentication**: JWT Bearer tokens, passwords hashed with `bcrypt`.
+- **Remote Repository**: `https://github.com/AslanMurzalin/Assigment1.2.git`
+
+---
+
+## 3. Scope Boundaries & Explicit Non-Goals (v1)
+
+Agents must strictly respect the scope decided for v1:
+
+| Feature | Status in v1 | Operational Guideline |
+|---|---|---|
+| **Web Interface** | **Active (Core)** | Responsive web only (supports 360px to 1920px viewports). |
+| **Browser Extension** | **Deferred** | Do NOT build an extension in v1. Link submission happens via the website form. |
+| **YouTube 720p Streaming** | **Active** | Direct streaming (`StreamingResponse`) only upon user click. **Zero permanent files stored on the server.** |
+| **Ozon Extraction** | **Deferred** | Do NOT build an Ozon-specific scraper in v1. Treat Ozon links as generic sites. |
+| **Generic Sites** | **Active** | Auto-extract HTML `<title>` and `<meta name="description">` (or OpenGraph fallback). |
+| **Tags Architecture** | **Active ($M:N$)** | Relational normalized schema: `tags` table and `link_tags` junction table. |
+| **Duplicate Links** | **Allowed** | Users may save identical URLs without conflict. |
+| **Out of Scope** | **Excluded** | PWA, native apps, sharing/collaboration, import/export, audio-only extraction, resolution pickers. |
+
+---
+
+## 4. Strict Iteration Workflow
+
+Development proceeds strictly in 5 distinct iterations. **Do not skip ahead.**
+
+```mermaid
+graph LR
+    Iter1["1. Frontend (MockService)"] --> Iter2["2. OpenAPI Contract"]
+    Iter2 --> Iter3["3. Backend (In-Memory)"]
+    Iter3 --> Iter4["4. Backend (SQLite M:N)"]
+    Iter4 --> Iter5["5. Full Integration"]
+```
+
+### Iteration 1: Frontend with `MockService`
+- Build the entire responsive UI using `MockAuthService` and `MockLinkService`.
+- Use `localStorage` + artificial network delay (200–400ms) to simulate real server behavior.
+- **Rule**: No backend dependencies during this iteration. The frontend must be fully testable and demo-ready independently.
+
+### Iteration 2: API Contract (`openapi.yml`)
+- Single source of truth for the API contract at the project root (`openapi.yml`).
+- Define all paths, DTO schemas, status codes, JWT security schemes, and streaming binary response.
+- **Rule**: Validate the YAML file before proceeding to backend work.
+
+### Iteration 3: Backend with In-Memory Storage
+- Scaffold FastAPI and implement Pydantic v2 schemas matching `openapi.yml`.
+- Implement clean architecture: Routers $\rightarrow$ Services $\rightarrow$ `AbstractUserRepository` / `AbstractLinkRepository` $\rightarrow$ `InMemoryRepository`.
+- Implement metadata extractors and YouTube streaming.
+- **Rule**: Must pass all automated tests in memory before touching SQLite.
+
+### Iteration 4: Backend with SQLite Storage ($M:N$ Tags)
+- Configure SQLite and declare SQLAlchemy models: `UserModel`, `LinkModel`, `TagModel`, `link_tags` junction table.
+- Implement `SQLiteUserRepository` and `SQLiteLinkRepository` fulfilling the abstract repository interfaces.
+- Implement relational search (`ilike`) and tag filtering (SQL joins).
+- Switch FastAPI dependency injection (`api/dependencies.py`) to SQLite without altering routers or services.
+
+### Iteration 5: Frontend + Backend Integration
+- Implement `HttpAuthService` and `HttpLinkService` using Axios/Fetch with JWT interceptors.
+- Swap mock services for real HTTP services via client-side dependency injection.
+- Configure CORS and `.env` variables (`VITE_API_URL`).
+- Run end-to-end smoke verification and deliver `README.md`.
+
+---
+
+## 5. Development & Code Conventions
+
+### 5.1 Clean Architecture Rules
+1. **Routers** handle HTTP protocols, query/path parameters, and status codes. They must never contain business logic or raw database queries.
+2. **Services** contain core business logic (auth verification, extractor coordination, tag association).
+3. **Repositories** isolate data storage mechanisms. Business services must depend on abstract repository interfaces (`AbstractLinkRepository`), not concrete classes.
+4. **Client Services**: The frontend components consume interfaces (`IAuthService`, `ILinkService`), allowing mock services to be swapped for HTTP services without modifying UI components.
+
+### 5.2 Security Protocols
+- Passwords must always be hashed with `bcrypt`. Never log or return passwords or hashes in API responses.
+- All link queries must be strictly scoped to the authenticated user (`user_id == current_user.id`).
+- Validate URLs on submission to protect against SSRF (block `localhost`, `127.0.0.1`, private IP blocks).
+- YouTube downloads must stream directly to the client without creating temporary files on the server.
+
+### 5.3 Git & Task Tracking
+- Track progress against `tasks.md` and GitHub Issues on [AslanMurzalin/Assigment1.2](https://github.com/AslanMurzalin/Assigment1.2).
+- When completing a task:
+  1. Verify all acceptance criteria and "Done Means" conditions.
+  2. Mark the corresponding item in `tasks.md` as completed `[x]`.
+  3. Close or reference the corresponding GitHub issue.
+  4. Write atomic Git commits with clear commit messages (e.g., `feat: ...`, `fix: ...`, `docs: ...`).
+
+---
+
+## 6. Project Directory Map
+
+```text
+c:\Users\aslan\PycharmProjects\assigment1/
+├── AGENTS.md                  # <-- THIS FILE (Agent instructions & operational memory)
+├── architecture.md            # System architecture, schemas, and diagrams
+├── tasks.md                   # 5-iteration checklist of all atomic tasks
+├── scope.md                   # Original v1 product requirements
+├── openapi.yml                # (Created in Iteration 2) API contract specification
+├── .gitignore                 # Git ignore patterns
+│
+├── frontend/                  # (Created in Iteration 1) Vite + React + TypeScript + Tailwind
+│   ├── src/
+│   │   ├── api/               # Client, contracts, services (Mock & HTTP)
+│   │   ├── components/        # UI components (auth, links, search, common)
+│   │   ├── hooks/             # Custom React hooks (useAuth, useLinks)
+│   │   ├── pages/             # Route pages (Login, Register, Dashboard)
+│   │   └── types/             # Domain TypeScript interfaces
+│   ├── package.json
+│   └── vite.config.ts
+│
+└── backend/                   # (Created in Iteration 3) FastAPI application
+    ├── app/
+    │   ├── api/               # Routers and dependency injection
+    │   ├── core/              # Config, security, exceptions
+    │   ├── schemas/           # Pydantic DTO models
+    │   ├── models/            # SQLAlchemy ORM models
+    │   ├── repositories/      # Abstract, InMemory, and SQLite implementations
+    │   ├── services/          # Domain services & metadata extractors
+    │   ├── db/                # SQLite connection session
+    │   └── main.py            # FastAPI entry point
+    ├── tests/                 # Automated pytest suite
+    └── requirements.txt
+```
+
+---
+
+## 7. Change Log & Agent Notes
+
+*Record key decisions, environment notes, or workflow updates here:*
+
+- **2026-10-19**:
+  - Initialized repository and connected remote `https://github.com/AslanMurzalin/Assigment1.2.git`.
+  - Created [architecture.md](file:///c:/Users/aslan/PycharmProjects/assigment1/architecture.md) and [tasks.md](file:///c:/Users/aslan/PycharmProjects/assigment1/tasks.md) across 5 iterations.
+  - Resolved architectural decisions: removed browser extension from v1; removed Ozon scraper from v1; adopted normalized $M:N$ relational tags table; YouTube downloads use direct 720p streaming with zero server storage.
+  - Created 39 GitHub issues on `AslanMurzalin/Assigment1.2` matching all tasks.
+  - Created `AGENTS.md` as the operational manual and living memory.
