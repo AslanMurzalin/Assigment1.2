@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { CreateLinkInput, ILinkService, Link, UpdateLinkInput } from '../types';
+import type { CreateLinkInput, DownloadProgress, ILinkService, Link, UpdateLinkInput } from '../types';
 import { httpLinkService } from '../api/services/httpLinkService';
 
 export const useLinks = (linkService: ILinkService = httpLinkService) => {
@@ -44,8 +44,11 @@ export const useLinks = (linkService: ILinkService = httpLinkService) => {
     await fetchLinks();
   };
 
-  const downloadVideo = async (id: string) => {
-    return await linkService.downloadVideo(id);
+  const downloadVideo = async (
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ) => {
+    return await linkService.downloadVideo(id, onProgress);
   };
 
   // Derive unique list of all tags currently in links

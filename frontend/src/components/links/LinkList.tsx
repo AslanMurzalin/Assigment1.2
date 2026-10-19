@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Link, UpdateLinkInput } from '../../types';
+import type { DownloadProgress, Link, UpdateLinkInput } from '../../types';
 import { LinkCard } from './LinkCard';
 import { BookmarkX } from 'lucide-react';
 
@@ -8,7 +8,10 @@ interface LinkListProps {
   isLoading: boolean;
   onDelete: (id: string) => Promise<void>;
   onUpdate: (id: string, input: UpdateLinkInput) => Promise<unknown>;
-  onDownload: (id: string) => Promise<{ downloadUrl: string; filename: string }>;
+  onDownload: (
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ) => Promise<{ downloadUrl: string; filename: string }>;
   onSelectTag?: (tag: string) => void;
   onClearFilters?: () => void;
   isFiltered?: boolean;

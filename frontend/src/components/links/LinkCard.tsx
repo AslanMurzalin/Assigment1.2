@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Link, UpdateLinkInput } from '../../types';
+import type { DownloadProgress, Link, UpdateLinkInput } from '../../types';
 import { EditNotesModal } from './EditNotesModal';
 import {
   ExternalLink,
@@ -17,9 +17,28 @@ interface LinkCardProps {
   link: Link;
   onDelete: (id: string) => Promise<void>;
   onUpdate: (id: string, input: UpdateLinkInput) => Promise<unknown>;
-  onDownload: (id: string) => Promise<{ downloadUrl: string; filename: string }>;
+  onDownload: (
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ) => Promise<{ downloadUrl: string; filename: string }>;
   onSelectTag?: (tag: string) => void;
 }
+
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+};
+
+const formatRemainingTime = (seconds?: number): string => {
+  if (!seconds || !isFinite(seconds) || seconds <= 0) return '';
+  if (seconds < 60) return `~${Math.round(seconds)}s left`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `~${mins}m ${secs}s left`;
+};
 
 export const LinkCard: React.FC<LinkCardProps> = ({
   link,
@@ -31,6 +50,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const formattedDate = new Date(link.createdAt).toLocaleDateString(undefined, {
@@ -53,8 +73,11 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const handleDownload = async () => {
     setIsDownloading(true);
     setDownloadSuccess(false);
+    setDownloadProgress({ loaded: 0, percent: 5 });
     try {
-      const result = await onDownload(link.id);
+      const result = await onDownload(link.id, (prog) => {
+        setDownloadProgress(prog);
+      });
       const a = document.createElement('a');
       a.href = result.downloadUrl;
       a.download = result.filename;
@@ -63,9 +86,14 @@ export const LinkCard: React.FC<LinkCardProps> = ({
       document.body.removeChild(a);
 
       setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 3000);
+      setDownloadProgress({ loaded: 100, percent: 100 });
+      setTimeout(() => {
+        setDownloadSuccess(false);
+        setDownloadProgress(null);
+      }, 3500);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Download failed.');
+      setDownloadProgress(null);
     } finally {
       setIsDownloading(false);
     }
@@ -167,36 +195,65 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         )}
       </div>
 
-      {/* Footer / Streaming Download Button (YouTube only) */}
+      {/* Footer / Streaming Download & Filling Progress Scale (YouTube only) */}
       <div className="pt-2 border-t border-stone-100 mt-auto flex items-center justify-between">
         {isYouTube ? (
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className={`w-full py-2 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition ${
-              downloadSuccess
-                ? 'bg-emerald-600 text-white'
-                : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
-            } disabled:opacity-50`}
-          >
-            {isDownloading ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Streaming Video...</span>
-              </>
-            ) : downloadSuccess ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Download Started!</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-3.5 h-3.5" />
-                <span>Download (720p Stream)</span>
-              </>
-            )}
-          </button>
+          isDownloading ? (
+            <div className="w-full flex flex-col gap-1.5 p-2.5 bg-orange-50/70 border border-orange-200 rounded-xl">
+              {/* Header: Status and percentage */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-orange-950 font-semibold">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600" />
+                  </span>
+                  Streaming 720p...
+                </span>
+                <span className="text-orange-700 font-bold tabular-nums">
+                  {downloadProgress?.percent ?? 5}%
+                </span>
+              </div>
+
+              {/* Visual Filling Scale Bar */}
+              <div className="w-full h-2 bg-orange-100 rounded-full overflow-hidden p-0.5 border border-orange-200/60 shadow-inner">
+                <div
+                  className="h-full bg-linear-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-200 ease-out relative overflow-hidden"
+                  style={{ width: `${Math.max(5, downloadProgress?.percent ?? 5)}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/25 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Subtitle: Downloaded size & ETA/Speed */}
+              <div className="flex items-center justify-between text-[11px] text-stone-500 tabular-nums">
+                <span>
+                  {downloadProgress?.loaded ? formatBytes(downloadProgress.loaded) : '0 B'}
+                  {downloadProgress?.total ? ` / ${formatBytes(downloadProgress.total)}` : ''}
+                </span>
+                <span>
+                  {downloadProgress?.estimated
+                    ? formatRemainingTime(downloadProgress.estimated)
+                    : downloadProgress?.speed
+                    ? `${formatBytes(downloadProgress.speed)}/s`
+                    : 'Receiving chunks...'}
+                </span>
+              </div>
+            </div>
+          ) : downloadSuccess ? (
+            <div className="w-full py-2.5 px-3 text-xs font-semibold rounded-xl bg-emerald-600 text-white flex items-center justify-center gap-2 shadow-xs transition">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Download Complete! File Saved.</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="w-full py-2 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white shadow-xs transition hover:shadow-sm active:scale-[0.99]"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download (720p Stream)</span>
+            </button>
+          )
         ) : (
           <div className="text-[11px] text-stone-400 italic">Saved generic URL</div>
         )}

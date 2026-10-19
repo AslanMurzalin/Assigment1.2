@@ -1,6 +1,7 @@
 import { apiClient } from '../client';
 import type {
   CreateLinkInput,
+  DownloadProgress,
   FilterParams,
   ILinkService,
   Link,
@@ -110,15 +111,59 @@ export class HttpLinkService implements ILinkService {
     }
   }
 
-  async downloadVideo(id: string): Promise<{ downloadUrl: string; filename: string }> {
+  async downloadVideo(
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ): Promise<{ downloadUrl: string; filename: string }> {
     try {
+      const startTime = Date.now();
+
       const resp = await apiClient.get(`/api/v1/links/${id}/download`, {
         responseType: 'blob',
+        onDownloadProgress: (progressEvent) => {
+          if (onProgress) {
+            const loaded = progressEvent.loaded || 0;
+            const total = progressEvent.total || undefined;
+            let percent: number;
+
+            if (total && total > 0) {
+              percent = Math.min(99, Math.round((loaded * 100) / total));
+            } else {
+              // Adaptive progress estimate for 720p stream (~15MB typical size)
+              const benchmark = 15 * 1024 * 1024;
+              percent = Math.min(95, Math.round((loaded * 100) / benchmark));
+            }
+
+            const elapsedSec = Math.max(0.1, (Date.now() - startTime) / 1000);
+            const speed = loaded / elapsedSec; // bytes per second
+            const estimated =
+              total && speed > 0 && total > loaded
+                ? Math.round((total - loaded) / speed)
+                : undefined;
+
+            onProgress({
+              loaded,
+              total,
+              percent,
+              speed,
+              estimated,
+            });
+          }
+        },
       });
 
       // Check if received video stream is empty
       if (!resp.data || resp.data.size === 0) {
         throw new Error('Video stream returned 0 bytes. The video format may be unavailable or restricted.');
+      }
+
+      // Final 100% notification
+      if (onProgress) {
+        onProgress({
+          loaded: resp.data.size,
+          total: resp.data.size,
+          percent: 100,
+        });
       }
 
       // Parse filename from Content-Disposition header if available

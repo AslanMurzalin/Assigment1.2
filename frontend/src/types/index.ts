@@ -47,11 +47,22 @@ export interface IAuthService {
   logout(): Promise<void>;
 }
 
+export interface DownloadProgress {
+  loaded: number;
+  total?: number;
+  percent?: number;
+  speed?: number;
+  estimated?: number;
+}
+
 export interface ILinkService {
   getLinks(filters?: FilterParams): Promise<Link[]>;
   getLinkById(id: string): Promise<Link>;
   createLink(input: CreateLinkInput): Promise<Link>;
   updateLink(id: string, input: UpdateLinkInput): Promise<Link>;
   deleteLink(id: string): Promise<void>;
-  downloadVideo(id: string): Promise<{ downloadUrl: string; filename: string }>;
+  downloadVideo(
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ): Promise<{ downloadUrl: string; filename: string }>;
 }

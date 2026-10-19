@@ -1,4 +1,4 @@
-import type { CreateLinkInput, FilterParams, ILinkService, Link, SiteType, UpdateLinkInput } from '../../types';
+import type { CreateLinkInput, DownloadProgress, FilterParams, ILinkService, Link, SiteType, UpdateLinkInput } from '../../types';
 
 const STORAGE_LINKS_KEY = 'link_saver_links';
 const STORAGE_CURRENT_USER_KEY = 'link_saver_current_user';
@@ -208,8 +208,19 @@ export class MockLinkService implements ILinkService {
     this.saveStoredLinks(all);
   }
 
-  async downloadVideo(id: string): Promise<{ downloadUrl: string; filename: string }> {
-    await delay(400);
+  async downloadVideo(
+    id: string,
+    onProgress?: (progress: DownloadProgress) => void
+  ): Promise<{ downloadUrl: string; filename: string }> {
+    const totalBytes = 14 * 1024 * 1024;
+    onProgress?.({ loaded: 1 * 1024 * 1024, total: totalBytes, percent: 10 });
+    await delay(120);
+    onProgress?.({ loaded: 6 * 1024 * 1024, total: totalBytes, percent: 45 });
+    await delay(120);
+    onProgress?.({ loaded: 11 * 1024 * 1024, total: totalBytes, percent: 80 });
+    await delay(120);
+    onProgress?.({ loaded: totalBytes, total: totalBytes, percent: 100 });
+
     const link = await this.getLinkById(id);
     if (link.siteType !== 'youtube') {
       throw new Error('Only YouTube links support direct video streaming download');
