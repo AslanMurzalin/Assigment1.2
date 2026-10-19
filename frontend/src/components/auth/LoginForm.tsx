@@ -34,14 +34,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-2xl shadow-sm border border-slate-200">
+    <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-2xl shadow-xs border border-stone-200">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+        <div className="p-2.5 bg-orange-50 text-orange-600 rounded-xl">
           <LogIn className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back</h1>
-          <p className="text-sm text-slate-500">Sign in to access your saved links</p>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Welcome back</h1>
+          <p className="text-sm text-stone-500">Sign in to access your saved links</p>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
       <form onSubmit={handleSubmit} method="POST" className="space-y-4">
         <div>
-          <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="login-email" className="block text-sm font-medium text-stone-700 mb-1">
             Email address
           </label>
           <input
@@ -69,13 +69,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition"
           />
         </div>
 
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label htmlFor="login-password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="login-password" className="block text-sm font-medium text-stone-700">
               Password
             </label>
           </div>
@@ -88,14 +88,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition"
           />
         </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm hover:shadow transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl shadow-xs hover:shadow transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -105,13 +105,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         </button>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-        <p className="text-sm text-slate-600">
+      <div className="mt-6 pt-5 border-t border-stone-100 text-center">
+        <p className="text-sm text-stone-600">
           Don't have an account?{' '}
           <button
             type="button"
             onClick={onSwitchToRegister}
-            className="font-medium text-indigo-600 hover:text-indigo-800 transition"
+            className="font-medium text-orange-600 hover:text-orange-800 transition"
           >
             Create account
           </button>

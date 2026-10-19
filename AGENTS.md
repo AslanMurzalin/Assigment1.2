@@ -121,7 +121,8 @@ c:\Users\aslan\PycharmProjects\assigment1/
 │   ├── architecture.md        # System architecture, schemas, and diagrams
 │   ├── tasks.md               # 5-iteration checklist of all atomic tasks
 │   ├── scope.md               # Original v1 product requirements
-│   └── engineer.md            # Engineer & agent guidelines on resolving issues
+│   ├── engineer.md            # Engineer & agent guidelines on resolving issues
+│   └── design.md              # Design system & Orange-White visual identity
 │
 ├── frontend/                  # (Created in Iteration 1) Vite + React + TypeScript + Tailwind
 │   ├── src/
@@ -160,3 +161,5 @@ c:\Users\aslan\PycharmProjects\assigment1/
   - Created 39 GitHub issues on `AslanMurzalin/Assigment1.2` matching all tasks.
   - Created `AGENTS.md` as the operational manual and living memory.
   - Moved documentation files to `docs/` (`architecture.md`, `tasks.md`, `scope.md`) and created `docs/engineer.md` with instructions on how to solve issues.
+  - Completed all 10 Iteration 1 frontend tasks using `MockService` and closed issues #1–#10.
+  - Established **Orange & White** visual identity across the entire UI and documented all rules in `docs/design.md`.

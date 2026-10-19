@@ -55,7 +55,6 @@ export const LinkCard: React.FC<LinkCardProps> = ({
     setDownloadSuccess(false);
     try {
       const result = await onDownload(link.id);
-      // Trigger browser download via synthetic anchor
       const a = document.createElement('a');
       a.href = result.downloadUrl;
       a.download = result.filename;
@@ -75,23 +74,23 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const isYouTube = link.siteType === 'youtube';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+    <div className="bg-white rounded-2xl border border-stone-200 hover:border-orange-200 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
       <div>
         {/* Header / Source Badge & Actions */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             {isYouTube ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200/80">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                 <Video className="w-3.5 h-3.5 text-red-600 fill-current" />
                 YouTube (720p)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                <Globe className="w-3.5 h-3.5 text-slate-500" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-stone-100 text-stone-700 border border-stone-200">
+                <Globe className="w-3.5 h-3.5 text-stone-500" />
                 Generic
               </span>
             )}
-            <span className="flex items-center gap-1 text-[11px] text-slate-400">
+            <span className="flex items-center gap-1 text-[11px] text-stone-400">
               <Calendar className="w-3 h-3" />
               {formattedDate}
             </span>
@@ -101,7 +100,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+              className="p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
               title="Edit notes & tags"
               aria-label="Edit notes and tags"
             >
@@ -111,7 +110,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               type="button"
               disabled={isDeleting}
               onClick={handleDelete}
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-50"
+              className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-50"
               title="Delete link"
               aria-label="Delete link"
             >
@@ -121,12 +120,12 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-slate-900 text-base leading-snug mb-1 line-clamp-2">
+        <h3 className="font-semibold text-stone-900 text-base leading-snug mb-1 line-clamp-2">
           <a
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-indigo-600 hover:underline transition"
+            className="hover:text-orange-600 hover:underline transition"
           >
             {link.title || link.url}
           </a>
@@ -137,7 +136,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 break-all mb-3 max-w-full"
+          className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 break-all mb-3 max-w-full font-mono text-[11px]"
         >
           <span className="truncate max-w-[280px] sm:max-w-[400px]">{link.url}</span>
           <ExternalLink className="w-3 h-3 shrink-0" />
@@ -145,8 +144,8 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
         {/* User Notes */}
         {link.userNotes && (
-          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-100 text-xs text-slate-700 mb-3 flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+          <div className="p-3 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-700 mb-3 flex items-start gap-2">
+            <FileText className="w-3.5 h-3.5 text-stone-400 mt-0.5 shrink-0" />
             <p className="whitespace-pre-line line-clamp-3">{link.userNotes}</p>
           </div>
         )}
@@ -159,7 +158,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                 key={tag}
                 type="button"
                 onClick={() => onSelectTag?.(tag)}
-                className="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 rounded-md transition"
+                className="px-2 py-0.5 text-[11px] font-medium bg-stone-100 hover:bg-orange-50 text-stone-600 hover:text-orange-700 border border-stone-200 hover:border-orange-200 rounded-md transition"
               >
                 #{tag}
               </button>
@@ -169,7 +168,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
       </div>
 
       {/* Footer / Streaming Download Button (YouTube only) */}
-      <div className="pt-2 border-t border-slate-100 mt-auto flex items-center justify-between">
+      <div className="pt-2 border-t border-stone-100 mt-auto flex items-center justify-between">
         {isYouTube ? (
           <button
             type="button"
@@ -199,7 +198,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
             )}
           </button>
         ) : (
-          <div className="text-[11px] text-slate-400 italic">Saved generic URL</div>
+          <div className="text-[11px] text-stone-400 italic">Saved generic URL</div>
         )}
       </div>
 

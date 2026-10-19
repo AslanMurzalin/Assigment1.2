@@ -16,7 +16,7 @@ export const TagFilter: React.FC<TagFilterProps> = ({
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0 pr-1">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 uppercase tracking-wider shrink-0 pr-1">
         <TagIcon className="w-3.5 h-3.5" />
         <span>Tags:</span>
       </div>
@@ -26,8 +26,8 @@ export const TagFilter: React.FC<TagFilterProps> = ({
         onClick={() => onSelectTag(null)}
         className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 transition ${
           selectedTag === null
-            ? 'bg-indigo-600 text-white shadow-xs'
-            : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+            ? 'bg-orange-600 text-white shadow-xs'
+            : 'bg-white hover:bg-orange-50 text-stone-600 hover:text-orange-700 border border-stone-200 hover:border-orange-200'
         }`}
       >
         All
@@ -42,8 +42,8 @@ export const TagFilter: React.FC<TagFilterProps> = ({
             onClick={() => onSelectTag(isSelected ? null : tag)}
             className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium shrink-0 transition ${
               isSelected
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                ? 'bg-orange-600 text-white shadow-xs'
+                : 'bg-white hover:bg-orange-50 text-stone-600 hover:text-orange-700 border border-stone-200 hover:border-orange-200'
             }`}
           >
             <span>#{tag}</span>
