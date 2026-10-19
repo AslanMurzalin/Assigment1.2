@@ -44,24 +44,45 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     if shutil.which("node"):
         cmd.extend(["--js-runtimes", "node"])
 
-    # Robust format selection: best video <= 720p + best audio, fallback to combined best <= 720p, or best available
+    # Robust format selection prioritizing H.264 (avc1) for fastest muxing:
+    #   1. Best H.264 video ≤720p + best AAC audio  (fastest mux, best compat)
+    #   2. Best any-codec video ≤720p + best audio   (fallback, may use VP9/AV1 → slower mux)
+    #   3. Best pre-muxed ≤720p                      (progressive, no mux needed)
+    #   4. Absolute fallback
     cmd.extend([
-        "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/bestvideo+bestaudio/best",
+        "-f", (
+            "bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
+            "bestvideo[height<=720]+bestaudio/"
+            "best[height<=720]/"
+            "bestvideo+bestaudio/best"
+        ),
+        "--merge-output-format", "mp4",
+    ])
+
+    # Use fragmented MP4 so ffmpeg can stream output immediately
+    # instead of buffering the entire file for the moov atom
+    cmd.extend([
+        "--postprocessor-args", "ffmpeg:-movflags frag_keyframe+empty_moov+faststart",
+    ])
+
+    cmd.extend([
         "-o", "-",
         url,
     ])
+
+    chunk_size = 256 * 1024  # 256 KB chunks for less syscall overhead
 
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-        bufsize=64 * 1024,
+        bufsize=chunk_size,
     )
 
     try:
         while True:
-            # Read 64 KB chunk in worker thread to prevent event loop blocking
-            chunk = await asyncio.to_thread(process.stdout.read, 64 * 1024)
+            # Read chunks in worker thread to prevent event loop blocking
+            chunk = await asyncio.to_thread(process.stdout.read, chunk_size)
             if not chunk:
                 break
             yield chunk
