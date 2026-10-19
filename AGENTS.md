@@ -127,7 +127,8 @@ c:\Users\aslan\PycharmProjects\assigment1/
 │   ├── tasks.md               # 5-iteration checklist of all atomic tasks
 │   ├── scope.md               # Original v1 product requirements
 │   ├── engineer.md            # Engineer & agent guidelines on resolving issues
-│   └── design.md              # Design system & Orange-White visual identity
+│   ├── design.md              # Design system & Orange-White visual identity
+│   └── QA.md                  # QA role specification & issue reopening protocol
 │
 ├── frontend/                  # (Created in Iteration 1) Vite + React + TypeScript + Tailwind
 │   ├── src/
