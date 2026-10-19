@@ -120,6 +120,7 @@ export class HttpLinkService implements ILinkService {
 
       const resp = await apiClient.get(`/api/v1/links/${id}/download`, {
         responseType: 'blob',
+        timeout: 0, // No timeout for large video streams
         onDownloadProgress: (progressEvent) => {
           if (onProgress) {
             const loaded = progressEvent.loaded || 0;

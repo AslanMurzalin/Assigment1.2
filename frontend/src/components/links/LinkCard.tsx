@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { DownloadProgress, Link, UpdateLinkInput } from '../../types';
 import { EditNotesModal } from './EditNotesModal';
 import {
@@ -52,6 +52,16 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Warn user before page refresh/close during active download
+  useEffect(() => {
+    if (!isDownloading) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDownloading]);
 
   const formattedDate = new Date(link.createdAt).toLocaleDateString(undefined, {
     year: 'numeric',
