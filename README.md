@@ -10,10 +10,10 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
 
 | Component | Technology | Description |
 |---|---|---|
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons | Responsive UI (360px–1920px), dependency-injected services (`HttpAuthService`, `HttpLinkService`) |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons | Responsive UI (360px–1920px), dependency-injected services (`HttpAuthService`, `HttpLinkService`), visual progress tracking |
 | **Backend** | FastAPI, Python 3.10+, Pydantic v2, Uvicorn | Clean architecture: Routers &rarr; Domain Services &rarr; Repositories |
 | **Database & ORM** | SQLite (`app.db`), SQLAlchemy | Normalized $M:N$ relational model: `users`, `links`, `tags`, and `link_tags` junction table |
-| **Video Streaming** | `yt-dlp` | On-demand 720p direct streaming via `StreamingResponse` (**zero permanent server storage**) |
+| **Video Streaming** | `yt-dlp`, `imageio-ffmpeg` | On-demand accelerated 720p stream with zero permanent server retention; accurate duration seeking and fast muxing |
 | **Metadata Extraction** | `httpx` + `BeautifulSoup4` | Automatic parsing of HTML `<title>` and `<meta name="description">` / OpenGraph |
 | **Security** | `pyjwt`, `passlib[bcrypt]` | JWT Bearer token authentication, salted bcrypt password hashing, strict user data isolation |
 | **API Contract** | OpenAPI 3.0.3 (`openapi.yml`) | Single source of truth specifying all endpoints, DTO schemas, and security schemes |
@@ -34,8 +34,12 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
 4. **Relational Search & Filtering**:
    - SQL `ilike` substring search across link titles and personal notes.
    - Relational SQL joins for tag-based filtering.
-5. **Direct 720p YouTube Video Streaming**:
-   - User-initiated direct streaming download without consuming permanent server disk storage.
+5. **High-Performance 720p YouTube Video Streaming**:
+   - On-demand streaming download with concurrent audio/video download and proper metadata muxing.
+   - Seekable timeline with preserved duration (no "live stream" display artifacts).
+   - Temporary file-based on-demand muxing with automatic cleanup in a `finally` block (**zero permanent files stored on the server**).
+   - Real-time animated **filling scale progress bar** with loaded bytes, speed, percentage, and ETA metrics.
+   - Protection against accidental page unload/refresh during active downloads.
 6. **Orange & White Design System**:
    - Clean, accessible visual hierarchy adhering to `docs/design.md`.
 
@@ -49,10 +53,11 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
 ├── AGENTS.md                  # Agent operating guide and project memory
 ├── docs/                      # Technical documentation
 │   ├── architecture.md        # Architectural diagrams and schema specifications
-│   ├── tasks.md               # 5-iteration checklist of all 39 atomic tasks
+│   ├── tasks.md               # 5-iteration checklist of all atomic tasks
 │   ├── scope.md               # Original v1 product requirements
 │   ├── engineer.md            # Issue resolution handbook and testing guide
-│   └── design.md              # Orange-White visual identity guide
+│   ├── design.md              # Orange-White visual identity guide
+│   └── QA.md                  # QA role specification & issue reopening protocol
 │
 ├── frontend/                  # React 19 + TypeScript + Vite + Tailwind CSS
 │   ├── src/
@@ -151,7 +156,7 @@ Run the full pytest suite (In-Memory, SQLite M:N, and End-to-End integration):
 pytest backend/tests/ -v
 ```
 
-All 8 tests should pass:
+All 9 tests pass:
 - `test_health_check`
 - `test_auth_flow`
 - `test_links_crud_and_search`
@@ -160,6 +165,7 @@ All 8 tests should pass:
 - `test_sqlite_auth_flow`
 - `test_sqlite_mn_tags_and_deduplication`
 - `test_e2e_full_lifecycle`
+- `test_youtube_streaming_generator`
 
 ---
 
