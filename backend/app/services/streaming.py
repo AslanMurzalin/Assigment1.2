@@ -41,14 +41,15 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     ytdlp_bin = get_ytdlp_bin()
     ffmpeg_exe = get_ffmpeg_path()
 
-    # Create temp file for yt-dlp output
-    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".mp4")
-    os.close(tmp_fd)  # yt-dlp will write to this path directly
+    # Create isolated temp directory for yt-dlp output
+    tmp_dir = tempfile.mkdtemp()
+    tmp_path = os.path.join(tmp_dir, "video.mp4")
 
     try:
         cmd = [
             ytdlp_bin,
             "--no-playlist",
+            "--force-overwrites",
         ]
 
         if ffmpeg_exe:
@@ -97,10 +98,9 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
                     break
                 yield chunk
     finally:
-        # Always clean up temp file
+        # Always clean up temp directory and all contents
         try:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
         except OSError:
             pass
 
