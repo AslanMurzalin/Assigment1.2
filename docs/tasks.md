@@ -15,59 +15,59 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
 
 > **Goal**: Build a responsive React SPA with complete UI features, running against mock services (in-memory / `localStorage`).
 
-- [ ] **Task 1.1: Frontend Project Initialization**
+- [x] **Task 1.1: Frontend Project Initialization**
   - Scaffold a new project using Vite + React + TypeScript.
   - Install and configure Tailwind CSS for responsive layouts.
   - Establish base folder structure (`api`, `components`, `pages`, `hooks`, `types`).
   - *Acceptance Criteria*: Project builds successfully (`npm run build`) and runs locally (`npm run dev`).
 
-- [ ] **Task 1.2: TypeScript Domain Models & Interfaces**
+- [x] **Task 1.2: TypeScript Domain Models & Interfaces**
   - Define interfaces: `User`, `Link` (fields: `id`, `url`, `title`, `description`, `site_type`, `user_notes`, `tags: string[]`, `created_at`), `SiteType` (`youtube` | `generic`), `FilterParams`.
   - Define contract interfaces `IAuthService` and `ILinkService`.
   - *Acceptance Criteria*: Interfaces are exported from `src/types` and ready for service implementations.
 
-- [ ] **Task 1.3: Mock Service Implementation (`MockAuthService` & `MockLinkService`)**
+- [x] **Task 1.3: Mock Service Implementation (`MockAuthService` & `MockLinkService`)**
   - Create `MockAuthService`: signup, login (stores synthetic token in `localStorage`), get current user.
   - Create `MockLinkService`: methods `getLinks(search?, tag?)`, `createLink(url, notes, tags)`, `updateLink(id, notes, tags)`, `deleteLink(id)`, `download(id)`.
   - Add realistic network latency simulation (`Promise` with `setTimeout` 200–400ms) and initial seed data (YouTube and generic links with tags).
   - For YouTube links, return a simulated download trigger or mock stream progress.
   - *Acceptance Criteria*: Service methods return typed promises and persist changes in `localStorage`.
 
-- [ ] **Task 1.4: Authentication Module (Login & Register Pages)**
+- [x] **Task 1.4: Authentication Module (Login & Register Pages)**
   - Implement `AuthContext` to manage active user session and auth token.
   - Build responsive Login and Register forms with client-side input validation (email, password).
   - Add form toggle and route protection (redirecting unauthenticated users to `/login`, authenticated users to `/dashboard`).
   - *Acceptance Criteria*: Users can sign up, log in via mock service, and access the dashboard.
 
-- [ ] **Task 1.5: UI Shell & Navigation (Layout & Header)**
+- [x] **Task 1.5: UI Shell & Navigation (Layout & Header)**
   - Create a responsive `Navbar`: brand logo, current user indicator, and Logout button.
   - Support mobile viewports (collapsible menu / compact header).
   - *Acceptance Criteria*: Header adapts seamlessly across viewports from 360px to 1920px.
 
-- [ ] **Task 1.6: Link Submission Form (AddLinkForm)**
+- [x] **Task 1.6: Link Submission Form (AddLinkForm)**
   - Create URL paste input field with validation.
   - Add optional user notes textarea and tag input chips (split by comma or Enter).
   - Add submit button with loading spinner state.
   - In mock service, automatically infer `title` and `site_type` (`youtube` vs `generic`) based on URL domain.
   - *Acceptance Criteria*: New link is added to the list with auto-generated metadata and custom tags.
 
-- [ ] **Task 1.7: Link List & Card Display (LinkCard & LinkList)**
+- [x] **Task 1.7: Link List & Card Display (LinkCard & LinkList)**
   - Create `LinkCard` component: displays title, clickable external URL, source badge (YouTube / Generic), description/notes, tags list, and creation date.
   - Include a delete button with confirmation.
   - *Acceptance Criteria*: Cards render responsively in a list/grid layout.
 
-- [ ] **Task 1.8: Notes & Tags Editing**
+- [x] **Task 1.8: Notes & Tags Editing**
   - Allow users to edit `user_notes` and `tags` on existing cards (inline or via modal).
   - Save updates through `MockLinkService`.
   - *Acceptance Criteria*: Note and tag changes update instantly in the UI and persist in `localStorage`.
 
-- [ ] **Task 1.9: Search & Filtering Bar (SearchBar & TagFilter)**
+- [x] **Task 1.9: Search & Filtering Bar (SearchBar & TagFilter)**
   - Create search input field for real-time / debounced search over `title`, `user_notes`, and `tags`.
   - Add quick-filter chips for tags.
   - Provide a "Clear filters" action.
   - *Acceptance Criteria*: Typing search terms or clicking tag chips immediately filters the card list.
 
-- [ ] **Task 1.10: YouTube Download Action Simulation**
+- [x] **Task 1.10: YouTube Download Action Simulation**
   - Render a "Download (720p)" button **exclusively** on cards where `site_type === 'youtube'`.
   - On click, show loading feedback / download started notification.
   - *Acceptance Criteria*: Download button is visible only for YouTube links and responds to clicks.
