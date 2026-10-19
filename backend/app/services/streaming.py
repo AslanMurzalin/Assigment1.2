@@ -16,6 +16,8 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     """
     Directly streams 720p YouTube video to client via yt-dlp stdout pipe.
     Zero permanent files are stored on server disk.
+    Uses thread-safe subprocess.Popen with asyncio.to_thread for universal
+    compatibility across Windows and Unix event loops.
     """
     ytdlp_bin = get_ytdlp_bin()
     cmd = [
@@ -26,24 +28,28 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
         url,
     ]
 
-    process = await asyncio.create_subprocess_exec(
-        *cmd,
+    process = subprocess.Popen(
+        cmd,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        bufsize=64 * 1024,
     )
 
     try:
         while True:
-            chunk = await process.stdout.read(64 * 1024)  # 64 KB chunks
+            # Read 64 KB chunk in worker thread to prevent event loop blocking
+            chunk = await asyncio.to_thread(process.stdout.read, 64 * 1024)
             if not chunk:
                 break
             yield chunk
     finally:
-        if process.returncode is None:
+        if process.poll() is None:
             try:
                 process.kill()
             except ProcessLookupError:
                 pass
+        if process.stdout:
+            process.stdout.close()
 
 def get_safe_filename(title: str) -> str:
     cleaned = re.sub(r'[^a-zA-Z0-9_\- ]', '', title).strip().replace(' ', '_')

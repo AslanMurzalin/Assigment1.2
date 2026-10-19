@@ -131,3 +131,12 @@ def test_e2e_full_lifecycle():
     # Confirm Link 1 is gone
     get_del = client.get(f"/api/v1/links/{link1['id']}", headers=headers)
     assert get_del.status_code == 404
+
+@pytest.mark.anyio
+async def test_youtube_streaming_generator():
+    from app.services.streaming import stream_youtube_video
+    gen = stream_youtube_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    try:
+        assert hasattr(gen, "__anext__")
+    finally:
+        await gen.aclose()
