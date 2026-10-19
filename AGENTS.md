@@ -100,10 +100,10 @@ graph LR
 - YouTube downloads must stream directly to the client without creating temporary files on the server.
 
 ### 5.3 Git & Task Tracking
-- Track progress against `tasks.md` and GitHub Issues on [AslanMurzalin/Assigment1.2](https://github.com/AslanMurzalin/Assigment1.2).
+- Track progress against `docs/tasks.md` and GitHub Issues on [AslanMurzalin/Assigment1.2](https://github.com/AslanMurzalin/Assigment1.2).
 - When completing a task:
   1. Verify all acceptance criteria and "Done Means" conditions.
-  2. Mark the corresponding item in `tasks.md` as completed `[x]`.
+  2. Mark the corresponding item in `docs/tasks.md` as completed `[x]`.
   3. Close or reference the corresponding GitHub issue.
   4. Write atomic Git commits with clear commit messages (e.g., `feat: ...`, `fix: ...`, `docs: ...`).
 
@@ -114,11 +114,14 @@ graph LR
 ```text
 c:\Users\aslan\PycharmProjects\assigment1/
 ├── AGENTS.md                  # <-- THIS FILE (Agent instructions & operational memory)
-├── architecture.md            # System architecture, schemas, and diagrams
-├── tasks.md                   # 5-iteration checklist of all atomic tasks
-├── scope.md                   # Original v1 product requirements
 ├── openapi.yml                # (Created in Iteration 2) API contract specification
 ├── .gitignore                 # Git ignore patterns
+│
+├── docs/                      # Project documentation & issue resolution guides
+│   ├── architecture.md        # System architecture, schemas, and diagrams
+│   ├── tasks.md               # 5-iteration checklist of all atomic tasks
+│   ├── scope.md               # Original v1 product requirements
+│   └── engineer.md            # Engineer & agent guidelines on resolving issues
 │
 ├── frontend/                  # (Created in Iteration 1) Vite + React + TypeScript + Tailwind
 │   ├── src/
@@ -152,7 +155,8 @@ c:\Users\aslan\PycharmProjects\assigment1/
 
 - **2026-10-19**:
   - Initialized repository and connected remote `https://github.com/AslanMurzalin/Assigment1.2.git`.
-  - Created [architecture.md](file:///c:/Users/aslan/PycharmProjects/assigment1/architecture.md) and [tasks.md](file:///c:/Users/aslan/PycharmProjects/assigment1/tasks.md) across 5 iterations.
+  - Created `docs/architecture.md` and `docs/tasks.md` across 5 iterations.
   - Resolved architectural decisions: removed browser extension from v1; removed Ozon scraper from v1; adopted normalized $M:N$ relational tags table; YouTube downloads use direct 720p streaming with zero server storage.
   - Created 39 GitHub issues on `AslanMurzalin/Assigment1.2` matching all tasks.
   - Created `AGENTS.md` as the operational manual and living memory.
+  - Moved documentation files to `docs/` (`architecture.md`, `tasks.md`, `scope.md`) and created `docs/engineer.md` with instructions on how to solve issues.
