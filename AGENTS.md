@@ -93,11 +93,16 @@ graph LR
 3. **Repositories** isolate data storage mechanisms. Business services must depend on abstract repository interfaces (`AbstractLinkRepository`), not concrete classes.
 4. **Client Services**: The frontend components consume interfaces (`IAuthService`, `ILinkService`), allowing mock services to be swapped for HTTP services without modifying UI components.
 
-### 5.2 Security Protocols
+### 5.2 Security & Streaming Protocols
 - Passwords must always be hashed with `bcrypt`. Never log or return passwords or hashes in API responses.
 - All link queries must be strictly scoped to the authenticated user (`user_id == current_user.id`).
 - Validate URLs on submission to protect against SSRF (block `localhost`, `127.0.0.1`, private IP blocks).
-- YouTube downloads must stream directly to the client without creating temporary files on the server.
+- **YouTube Direct Streaming & 0-Byte Prevention Protocol**:
+  1. **DASH Separate Streams**: Modern YouTube videos rarely provide single combined progressive streams for 720p. The selector MUST be `bestvideo[height<=720]+bestaudio/best[height<=720]/bestvideo+bestaudio/best`.
+  2. **On-The-Fly Muxing**: `imageio-ffmpeg` supplies the embedded `ffmpeg` binary location via `--ffmpeg-location`, enabling yt-dlp to stream merged audio+video directly to stdout with zero server file retention.
+  3. **Windows Anonymous Pipe Deadlock**: Windows pipe buffers are limited to 4096 bytes. `subprocess.Popen` MUST use `stderr=subprocess.DEVNULL` (or drain stderr in a separate thread), otherwise unread stderr fills the OS pipe buffer and deadlocks stdout streaming.
+  4. **JavaScript Runtime**: Supply `--js-runtimes node` if Node is detected in PATH to prevent deciphering errors on YouTube URLs.
+  5. **Client-Side Size Validation**: In `httpLinkService.ts`, check `resp.data.size > 0` before triggering browser file download.
 
 ### 5.3 Git & Task Tracking
 - Track progress against `docs/tasks.md` and GitHub Issues on [AslanMurzalin/Assigment1.2](https://github.com/AslanMurzalin/Assigment1.2).
@@ -168,4 +173,5 @@ c:\Users\aslan\PycharmProjects\assigment1/
   - Completed Iteration 4: Configured SQLite engine (`app.db`), declared SQLAlchemy models (`UserModel`, `TagModel`, `LinkModel`, `link_tags`), implemented `SQLiteUserRepository` and `SQLiteLinkRepository` with tag deduplication and SQL join filtering, switched FastAPI dependency injection to SQLite, and verified full integration test suite; closed issues #26–#31.
   - Completed Iteration 5: Implemented real Axios client with JWT interceptor and 401 error handler, implemented `HttpAuthService` and `HttpLinkService` fulfilling `IAuthService` and `ILinkService`, configured `.env.development`, integrated live backend with frontend, verified end-to-end integration test suite, verified Vite build, wrote root `README.md`, and closed issues #32–#39.
   - **Issue #40 Resolution (Windows Streaming NotImplementedError)**: Resolved `NotImplementedError: _make_subprocess_transport` occurring when streaming YouTube video on Windows. Replaced `asyncio.create_subprocess_exec` with a thread-safe `subprocess.Popen` pipeline with `asyncio.to_thread` chunk reader. This eliminates event loop policy incompatibilities while maintaining direct non-blocking streaming with zero server-side file retention.
-  - **All 40 tasks and GitHub issues across all iterations are now 100% complete and closed.**
+  - **Issue #41 Resolution (YouTube 0-Byte Video Download Fix)**: Fixed issue where modern YouTube videos without pre-merged progressive streams failed format selection `best[height<=720]/best` and returned 0 bytes. Integrated `imageio-ffmpeg` for embedded on-the-fly muxing, updated format selector to `bestvideo[height<=720]+bestaudio/best[height<=720]/bestvideo+bestaudio/best`, enabled Node.js JS runtime (`--js-runtimes node`), fixed Windows anonymous pipe deadlocks by avoiding blocking on stderr, and added frontend blob size verification.
+  - **All 41 tasks and GitHub issues across all iterations are now 100% complete and closed.**

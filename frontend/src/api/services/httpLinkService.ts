@@ -116,6 +116,11 @@ export class HttpLinkService implements ILinkService {
         responseType: 'blob',
       });
 
+      // Check if received video stream is empty
+      if (!resp.data || resp.data.size === 0) {
+        throw new Error('Video stream returned 0 bytes. The video format may be unavailable or restricted.');
+      }
+
       // Parse filename from Content-Disposition header if available
       let filename = `video_${id}_720p.mp4`;
       const disposition = resp.headers['content-disposition'];
@@ -126,7 +131,8 @@ export class HttpLinkService implements ILinkService {
         }
       }
 
-      const blob = new Blob([resp.data], { type: 'video/mp4' });
+      const contentType = (resp.headers['content-type'] as string) || 'video/mp4';
+      const blob = new Blob([resp.data], { type: contentType });
       const downloadUrl = URL.createObjectURL(blob);
 
       return { downloadUrl, filename };

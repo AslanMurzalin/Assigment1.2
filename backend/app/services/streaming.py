@@ -12,6 +12,16 @@ def get_ytdlp_bin() -> str:
         return venv_bin
     return shutil.which("yt-dlp") or "yt-dlp"
 
+def get_ffmpeg_path() -> str | None:
+    try:
+        import imageio_ffmpeg
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if os.path.exists(exe):
+            return exe
+    except Exception:
+        pass
+    return shutil.which("ffmpeg")
+
 async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     """
     Directly streams 720p YouTube video to client via yt-dlp stdout pipe.
@@ -20,13 +30,26 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
     compatibility across Windows and Unix event loops.
     """
     ytdlp_bin = get_ytdlp_bin()
+    ffmpeg_exe = get_ffmpeg_path()
+
     cmd = [
         ytdlp_bin,
         "--no-playlist",
-        "-f", "best[height<=720]/best",
+    ]
+
+    if ffmpeg_exe:
+        cmd.extend(["--ffmpeg-location", ffmpeg_exe])
+
+    # Add node as JS runtime if available to prevent YouTube JS extraction deprecation errors
+    if shutil.which("node"):
+        cmd.extend(["--js-runtimes", "node"])
+
+    # Robust format selection: best video <= 720p + best audio, fallback to combined best <= 720p, or best available
+    cmd.extend([
+        "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/bestvideo+bestaudio/best",
         "-o", "-",
         url,
-    ]
+    ])
 
     process = subprocess.Popen(
         cmd,
