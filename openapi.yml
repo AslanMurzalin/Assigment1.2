@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: Link Saver API
+  description: API specification for saving links, managing tags (M:N), and direct on-demand 720p YouTube video streaming.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /api/v1/auth/signup:
+    post:
+      summary: Register a new user
+      operationId: signup
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRead'
+        '400':
+          description: Invalid input or password too short
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate user and obtain JWT token
+      operationId: login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/me:
+    get:
+      summary: Get profile of authenticated user
+      operationId: getCurrentUser
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRead'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/links:
+    get:
+      summary: List user links with search and tag filtering
+      operationId: listLinks
+      tags:
+        - Links
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Search term across title and user notes
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: false
+          description: Filter links by tag name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkRead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new link with auto-extracted metadata
+      operationId: createLink
+      tags:
+        - Links
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkCreate'
+      responses:
+        '201':
+          description: Link created and metadata extracted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRead'
+        '400':
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/links/{id}:
+    get:
+      summary: Get link by ID
+      operationId: getLinkById
+      tags:
+        - Links
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Link found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update notes and tags on a link
+      operationId: updateLink
+      tags:
+        - Links
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkUpdate'
+      responses:
+        '200':
+          description: Link updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete link by ID
+      operationId: deleteLink
+      tags:
+        - Links
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Link deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/links/{id}/download:
+    get:
+      summary: Direct 720p streaming download of YouTube video
+      description: Streams video directly to client without storing temporary files on the server.
+      operationId: downloadVideo
+      tags:
+        - Downloads
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Binary video stream
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: attachment; filename="video_720p.mp4"
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Link is not a YouTube video
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserCreate:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: securepassword123
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: securepassword123
+
+    UserRead:
+      type: object
+      required:
+        - id
+        - email
+        - created_at
+      properties:
+        id:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-10-19T12:00:00Z
+
+    Token:
+      type: object
+      required:
+        - access_token
+        - token_type
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: bearer
+
+    SiteType:
+      type: string
+      enum:
+        - youtube
+        - generic
+      example: youtube
+
+    LinkCreate:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        user_notes:
+          type: string
+          default: ""
+          example: Great soundtrack
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+          example: ["music", "classics"]
+
+    LinkUpdate:
+      type: object
+      properties:
+        user_notes:
+          type: string
+          example: Updated review notes
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["music", "favorites"]
+
+    LinkRead:
+      type: object
+      required:
+        - id
+        - user_id
+        - url
+        - title
+        - description
+        - site_type
+        - user_notes
+        - tags
+        - created_at
+      properties:
+        id:
+          type: string
+          example: link-uuid-1
+        user_id:
+          type: string
+          example: user-uuid-1
+        url:
+          type: string
+          format: uri
+          example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        title:
+          type: string
+          example: Rick Astley - Never Gonna Give You Up
+        description:
+          type: string
+          example: The official video for Never Gonna Give You Up
+        site_type:
+          $ref: '#/components/schemas/SiteType'
+        user_notes:
+          type: string
+          example: Classic track
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["music", "80s"]
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-10-19T12:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2026-10-19T13:00:00Z
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          example: Link not found

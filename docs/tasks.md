@@ -78,20 +78,20 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
 
 > **Goal**: Define a rigorous OpenAPI 3.0/3.1 contract specifying all endpoints, request/response schemas, error codes, and auth security schemes.
 
-- [ ] **Task 2.1: Base Specification & Security Scheme**
+- [x] **Task 2.1: Base Specification & Security Scheme**
   - Create `openapi.yml` at project root.
   - Define API metadata (Title: "Link Saver API", Version: "1.0.0", local server URLs).
   - Define `HTTP Bearer` (JWT) security scheme.
   - *Acceptance Criteria*: File adheres to OpenAPI 3.0+ structure.
 
-- [ ] **Task 2.2: Auth Endpoint Contracts (/auth)**
+- [x] **Task 2.2: Auth Endpoint Contracts (/auth)**
   - Document `POST /api/v1/auth/signup`: request body (`email`, `password`), `201 Created` (`UserRead`).
   - Document `POST /api/v1/auth/login`: request body (`email`, `password`), `200 OK` (`Token`: `access_token`, `token_type`).
   - Document `GET /api/v1/auth/me`: returns authenticated profile (`UserRead`).
   - Define standard error responses (`400 Bad Request`, `401 Unauthorized`, `409 Conflict`).
   - *Acceptance Criteria*: All auth endpoints specify realistic request/response payload examples.
 
-- [ ] **Task 2.3: Link Management Contracts (/links)**
+- [x] **Task 2.3: Link Management Contracts (/links)**
   - Define DTO schemas: `LinkCreate` (`url`, `user_notes?`, `tags?: string[]`), `LinkUpdate` (`user_notes?`, `tags?: string[]`), `LinkRead` (includes `tags: string[]`, `site_type`).
   - Document `GET /api/v1/links`: query parameters `q` (search string), `tag` (tag filter).
   - Document `POST /api/v1/links`: creates link with server-side metadata fetching.
@@ -100,13 +100,13 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
   - Document `DELETE /api/v1/links/{id}`: deletion (`204 No Content`).
   - *Acceptance Criteria*: CRUD operations are strictly typed with validation rules (URL format, string lengths).
 
-- [ ] **Task 2.4: Video Streaming Endpoint Contract (/links/{id}/download)**
+- [x] **Task 2.4: Video Streaming Endpoint Contract (/links/{id}/download)**
   - Document `GET /api/v1/links/{id}/download`.
   - Define response as binary video stream (`content: video/mp4` with `format: binary`).
   - Define error responses: `400 Bad Request` (link is not YouTube), `404 Not Found`.
   - *Acceptance Criteria*: Streaming download operation is fully detailed in `openapi.yml`.
 
-- [ ] **Task 2.5: OpenAPI Validation**
+- [x] **Task 2.5: OpenAPI Validation**
   - Validate `openapi.yml` using a schema validator or linter.
   - Fix any syntax discrepancies or missing references.
   - *Acceptance Criteria*: File passes validation with 0 errors.
