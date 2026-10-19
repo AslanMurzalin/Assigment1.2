@@ -117,45 +117,45 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
 
 > **Goal**: Implement a functional FastAPI backend supporting all endpoints from `openapi.yml` using in-memory data structures.
 
-- [ ] **Task 3.1: FastAPI Setup & Project Structure**
+- [x] **Task 3.1: FastAPI Setup & Project Structure**
   - Scaffold `backend/app/` (`api`, `core`, `schemas`, `repositories`, `services`).
   - Create `requirements.txt` (`fastapi`, `uvicorn`, `pydantic[email]`, `pyjwt`, `passlib[bcrypt]`, `httpx`, `beautifulsoup4`, `yt-dlp`, `pytest`).
   - Create `main.py` configuring CORS for local React development.
   - *Acceptance Criteria*: Application boots via `uvicorn app.main:app --reload` and serves interactive docs at `/docs`.
 
-- [ ] **Task 3.2: Pydantic DTO Schemas**
+- [x] **Task 3.2: Pydantic DTO Schemas**
   - Implement `UserCreate`, `UserLogin`, `UserRead`, `Token`.
   - Implement `LinkCreate`, `LinkUpdate`, `LinkRead`, `SiteTypeEnum`.
   - *Acceptance Criteria*: Schemas mirror the structures defined in `openapi.yml`.
 
-- [ ] **Task 3.3: Abstract Repository Interfaces**
+- [x] **Task 3.3: Abstract Repository Interfaces**
   - Create `backend/app/repositories/base.py`:
     - `AbstractUserRepository`: `get_by_id`, `get_by_email`, `create`.
     - `AbstractLinkRepository`: `create`, `get_by_id`, `list_by_user(user_id, q?, tag?)`, `update`, `delete`.
   - *Acceptance Criteria*: Interfaces are completely decoupled from database mechanics.
 
-- [ ] **Task 3.4: In-Memory Repository Implementation**
+- [x] **Task 3.4: In-Memory Repository Implementation**
   - Create `InMemoryUserRepository` using in-process `dict[str, User]`.
   - Create `InMemoryLinkRepository` using in-process `dict[str, Link]` with case-insensitive search and tag matching.
   - *Acceptance Criteria*: Repositories execute in-memory CRUD operations correctly.
 
-- [ ] **Task 3.5: Security & JWT AuthService**
+- [x] **Task 3.5: Security & JWT AuthService**
   - Implement `core/security.py`: `hash_password`, `verify_password`, `create_access_token`, `decode_access_token`.
   - Implement FastAPI dependency `get_current_user` in `api/dependencies.py`.
   - *Acceptance Criteria*: Unit tests verify password hashing and token generation/decoding.
 
-- [ ] **Task 3.6: Auth API Endpoints (/api/v1/auth)**
+- [x] **Task 3.6: Auth API Endpoints (/api/v1/auth)**
   - Implement `/signup`, `/login`, `/me` routes.
   - Connect to `AuthService`, ensuring email uniqueness.
   - *Acceptance Criteria*: Able to register a user, obtain a JWT, and read the `/me` profile.
 
-- [ ] **Task 3.7: Metadata Extraction Services (YouTube & Generic)**
+- [x] **Task 3.7: Metadata Extraction Services (YouTube & Generic)**
   - Implement `GenericExtractor`: fetches HTML via `httpx`, parses `<title>` and `<meta name="description">` (or OpenGraph tags).
   - Implement `YouTubeExtractor`: inspects video title via YouTube metadata extractor (without downloading video file).
   - Implement dispatcher `MetadataExtractorService` to route by domain (`youtube.com`/`youtu.be` vs generic).
   - *Acceptance Criteria*: Supplying a URL extracts `title`, `description`, and classifies `site_type`.
 
-- [ ] **Task 3.8: Links API Endpoints (/api/v1/links)**
+- [x] **Task 3.8: Links API Endpoints (/api/v1/links)**
   - Implement routes:
     - `POST /api/v1/links` — creates link with automatic extractor invocation.
     - `GET /api/v1/links` — lists user links with `q` and `tag` filters.
@@ -164,13 +164,13 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
     - `DELETE /api/v1/links/{id}` — removes link.
   - *Acceptance Criteria*: Full CRUD works in memory with proper user data scoping.
 
-- [ ] **Task 3.9: YouTube Streaming Service (/links/{id}/download)**
+- [x] **Task 3.9: YouTube Streaming Service (/links/{id}/download)**
   - Implement YouTube streaming generator yielding chunks for 720p video.
   - Return `StreamingResponse(chunk_generator, media_type="video/mp4")` with `Content-Disposition`.
   - Verify link ownership and confirm `site_type == 'youtube'`.
   - *Acceptance Criteria*: Endpoint streams video directly to the caller without temporary server files.
 
-- [ ] **Task 3.10: In-Memory Backend Tests**
+- [x] **Task 3.10: In-Memory Backend Tests**
   - Write `pytest` test suite with `TestClient`:
     - Registration & login flow.
     - Link addition and search filters.
