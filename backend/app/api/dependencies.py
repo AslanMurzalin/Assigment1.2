@@ -1,23 +1,22 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
 from app.repositories.base import AbstractUserRepository, AbstractLinkRepository
-from app.repositories.in_memory import InMemoryUserRepository, InMemoryLinkRepository
+from app.repositories.sqlite import SQLiteUserRepository, SQLiteLinkRepository
 from app.services.auth_service import AuthService
 from app.services.link_service import LinkService
 from app.services.extractors.dispatcher import metadata_extractor_service
 from app.schemas.auth import UserRead
 
-# Singleton in-memory instances for Iteration 3
-_in_memory_user_repo = InMemoryUserRepository()
-_in_memory_link_repo = InMemoryLinkRepository()
-
 security_bearer = HTTPBearer(auto_error=False)
 
-def get_user_repository() -> AbstractUserRepository:
-    return _in_memory_user_repo
+def get_user_repository(db: Session = Depends(get_db)) -> AbstractUserRepository:
+    return SQLiteUserRepository(db)
 
-def get_link_repository() -> AbstractLinkRepository:
-    return _in_memory_link_repo
+def get_link_repository(db: Session = Depends(get_db)) -> AbstractLinkRepository:
+    return SQLiteLinkRepository(db)
 
 def get_auth_service(
     user_repo: AbstractUserRepository = Depends(get_user_repository),

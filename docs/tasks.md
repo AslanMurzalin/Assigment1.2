@@ -183,13 +183,13 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
 
 > **Goal**: Replace in-memory storage with SQLite and SQLAlchemy using normalized relational models (`links`, `tags`, and `link_tags` junction table).
 
-- [ ] **Task 4.1: SQLite Database Connection Setup**
+- [x] **Task 4.1: SQLite Database Connection Setup**
   - Configure database engine `sqlite:///./app.db` and session maker in `backend/app/db/session.py`.
   - Configure `connect_args={"check_same_thread": False}` for multi-threaded SQLite access.
   - Declare `Base` declarative model class.
   - *Acceptance Criteria*: Database connection initializes successfully.
 
-- [ ] **Task 4.2: SQLAlchemy ORM Models (M:N Schema)**
+- [x] **Task 4.2: SQLAlchemy ORM Models (M:N Schema)**
   - Create `UserModel`: `id`, `email` (indexed, unique), `hashed_password`, `created_at`.
   - Create `TagModel`: `id`, `name` (unique).
   - Create `link_tags` association table: `link_id` (FK to links), `tag_id` (FK to tags), composite PK `(link_id, tag_id)`.
@@ -197,7 +197,7 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
   - Add auto-table creation on application startup (`Base.metadata.create_all`).
   - *Acceptance Criteria*: Tables `users`, `links`, `tags`, and `link_tags` are created in `app.db`.
 
-- [ ] **Task 4.3: SQLite Repository Implementations with M:N Tag Handling**
+- [x] **Task 4.3: SQLite Repository Implementations with M:N Tag Handling**
   - Implement `SQLiteUserRepository(AbstractUserRepository)`.
   - Implement `SQLiteLinkRepository(AbstractLinkRepository)`:
     - Create/find existing tags by name during link creation/update.
@@ -205,18 +205,18 @@ Each task is atomic, bite-sized, and includes concrete acceptance criteria.
     - Fetch links with eager-loaded associated tags.
   - *Acceptance Criteria*: Link creation and updates cleanly associate tags via the junction table.
 
-- [ ] **Task 4.4: Relational Search & Tag Filtering in SQLite**
+- [x] **Task 4.4: Relational Search & Tag Filtering in SQLite**
   - Implement case-insensitive search (`ilike`) across `title` and `user_notes`.
   - Implement tag filtering using a SQL join between `links`, `link_tags`, and `tags` where `tags.name == tag`.
   - *Acceptance Criteria*: Search and tag filters return correct matching records via relational queries.
 
-- [ ] **Task 4.5: Dependency Injection Switch to SQLite**
+- [x] **Task 4.5: Dependency Injection Switch to SQLite**
   - In `api/dependencies.py`, configure dependency providers to return SQLite repositories.
   - Add `get_db` session generator.
   - Ensure services and routers require zero modifications.
   - *Acceptance Criteria*: Application writes all data to `app.db`, surviving server restarts.
 
-- [ ] **Task 4.6: SQLite Integration Tests**
+- [x] **Task 4.6: SQLite Integration Tests**
   - Configure test suite to run against an in-memory SQLite database (`:memory:`).
   - Execute full test suite against SQLite backend, specifically verifying tag creation, reuse, and filtering.
   - *Acceptance Criteria*: All tests pass under SQLite.

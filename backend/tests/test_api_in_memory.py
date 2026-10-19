@@ -7,15 +7,23 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.main import app
-from app.api.dependencies import _in_memory_user_repo, _in_memory_link_repo
+from app.repositories.in_memory import InMemoryUserRepository, InMemoryLinkRepository
+from app.api.dependencies import get_user_repository, get_link_repository
 
-client = TestClient(app)
+user_repo = InMemoryUserRepository()
+link_repo = InMemoryLinkRepository()
 
 @pytest.fixture(autouse=True)
-def clean_in_memory_db():
-    _in_memory_user_repo._users.clear()
-    _in_memory_user_repo._emails.clear()
-    _in_memory_link_repo._links.clear()
+def setup_in_memory():
+    app.dependency_overrides[get_user_repository] = lambda: user_repo
+    app.dependency_overrides[get_link_repository] = lambda: link_repo
+    user_repo._users.clear()
+    user_repo._emails.clear()
+    link_repo._links.clear()
+    yield
+    app.dependency_overrides.clear()
+
+client = TestClient(app)
 
 def test_health_check():
     response = client.get("/health")

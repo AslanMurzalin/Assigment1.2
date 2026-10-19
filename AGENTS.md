@@ -163,3 +163,6 @@ c:\Users\aslan\PycharmProjects\assigment1/
   - Moved documentation files to `docs/` (`architecture.md`, `tasks.md`, `scope.md`) and created `docs/engineer.md` with instructions on how to solve issues.
   - Completed all 10 Iteration 1 frontend tasks using `MockService` and closed issues #1–#10.
   - Established **Orange & White** visual identity across the entire UI and documented all rules in `docs/design.md`.
+  - Completed Iteration 2: Generated and validated comprehensive `openapi.yml` API contract and closed issues #11–#15.
+  - Completed Iteration 3: Scaffolded FastAPI backend with clean architecture, in-memory repository, JWT authentication, OpenGraph + YouTube extractors, direct video streaming, and verified with pytest suite; closed issues #16–#25.
+  - Completed Iteration 4: Configured SQLite engine (`app.db`), declared SQLAlchemy models (`UserModel`, `TagModel`, `LinkModel`, `link_tags`), implemented `SQLiteUserRepository` and `SQLiteLinkRepository` with tag deduplication and SQL join filtering, switched FastAPI dependency injection to SQLite, and verified full integration test suite; closed issues #26–#31.
