@@ -37,18 +37,35 @@ def test_format_price():
 @pytest.mark.anyio
 async def test_bhapi_ozon_extractor_success():
     mock_client = BhapiClient(token="test_token")
+    # Realistic OzonV2Product structure (from BHAPI OpenAPI spec)
     mock_ozon_data = {
-        "name": "Беспроводные наушники Sony WH-1000XM4",
-        "price": 24990,
+        "sku": "123456789",
+        "title": "Беспроводные наушники Sony WH-1000XM4",
         "brand": "Sony",
-        "rating": 4.9,
-        "reviews_count": 842,
-        "main_image": "https://cdn1.ozon.ru/multimedia/10000000.jpg",
-        "characteristics": {
-            "Тип": "Полноразмерные",
-            "Шумоподавление": "Активное",
-        },
         "description": "Флагманские наушники с шумоподавлением.",
+        "images": ["https://cdn1.ozon.ru/multimedia/10000000.jpg"],
+        "prices": {
+            "currency": "RUB",
+            "regular": 24990,
+            "bank_card": 22490,
+            "original": 34999,
+        },
+        "rating": {
+            "value": 4.9,
+            "review_count": 842,
+        },
+        "characteristics": {
+            "total_count": 2,
+            "items": [
+                {"id": "1", "name": "Тип", "values": ["Полноразмерные"]},
+                {"id": "2", "name": "Шумоподавление", "values": ["Активное"]},
+            ],
+        },
+        "seller": {"name": "SONY CENTER", "url": "https://www.ozon.ru/seller/sony/", "rating_display": "9.8"},
+        "category_path": [
+            {"name": "Электроника", "url": "/category/elektronika/"},
+            {"name": "Наушники", "url": "/category/naushniki/"},
+        ],
     }
 
     with patch.object(mock_client, "get_ozon_product", new_callable=AsyncMock) as mock_get:
@@ -63,6 +80,9 @@ async def test_bhapi_ozon_extractor_success():
         assert meta.specs is not None
         assert meta.specs.get("Brand") == "Sony"
         assert meta.specs.get("Шумоподавление") == "Активное"
+        assert meta.specs.get("SKU") == "123456789"
+        assert meta.specs.get("Seller") == "SONY CENTER"
+        assert meta.specs.get("Category") == "Наушники"
 
 
 @pytest.mark.anyio

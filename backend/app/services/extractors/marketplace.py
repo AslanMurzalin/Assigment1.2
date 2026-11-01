@@ -214,38 +214,98 @@ class OzonExtractor(BaseExtractor):
         fallback_title = f"Ozon Товар {f'({sku})' if sku else ''}".strip()
         fallback_desc = "Товар на маркетплейсе Ozon."
 
-        # 1. Try BHAPI if configured
+        # 1. Try BHAPI if configured  (OzonV2Product schema)
         if self.client.is_configured():
             try:
                 bh_data = await self.client.get_ozon_product(url)
                 if bh_data:
-                    title = bh_data.get("name") or bh_data.get("title") or bh_data.get("product_name")
+                    # title — OzonV2Product.title (also try legacy keys)
+                    title = bh_data.get("title") or bh_data.get("name") or bh_data.get("product_name")
+
+                    # prices — OzonV2Product.prices.regular / bank_card
+                    prices_obj = bh_data.get("prices") or {}
                     price_raw = (
-                        bh_data.get("price")
+                        prices_obj.get("regular")
+                        or prices_obj.get("bank_card")
+                        or prices_obj.get("original")
+                        or bh_data.get("price")          # legacy v1 fallback
                         or (bh_data.get("price_info") or {}).get("price")
-                        or bh_data.get("card_price")
-                        or bh_data.get("final_price")
                     )
                     price = _format_price(price_raw)
-                    brand = bh_data.get("brand") or bh_data.get("brand_name")
-                    rating = bh_data.get("rating") or bh_data.get("review_rating")
-                    reviews_count = bh_data.get("reviews_count") or bh_data.get("feedbacks_count")
+
+                    # brand — OzonV2Product.brand (str or dict)
+                    brand_raw = bh_data.get("brand")
+                    brand = brand_raw if isinstance(brand_raw, str) else (
+                        brand_raw.get("name") if isinstance(brand_raw, dict) else None
+                    )
+
+                    # rating — OzonV2Product.rating.value + .review_count
+                    rating_obj = bh_data.get("rating") or {}
+                    rating_val = rating_obj.get("value") if isinstance(rating_obj, dict) else rating_obj
+                    review_count = rating_obj.get("review_count") if isinstance(rating_obj, dict) else (
+                        bh_data.get("reviews_count") or bh_data.get("feedbacks_count")
+                    )
+
+                    # description
                     desc = bh_data.get("description") or bh_data.get("short_description") or ""
 
-                    image_url = _extract_image_from_dict(bh_data)
-                    specs = _extract_specs_from_dict(bh_data)
-                    if sku and "SKU" not in specs:
-                        specs["SKU"] = sku
+                    # images — OzonV2Product.images[] (array of strings)
+                    images_list = bh_data.get("images") or []
+                    image_url = (
+                        images_list[0] if images_list and isinstance(images_list[0], str)
+                        else _extract_image_from_dict(bh_data)
+                    )
+
+                    # seller — OzonV2Product.seller.name
+                    seller_obj = bh_data.get("seller") or {}
+                    seller_name = seller_obj.get("name") if isinstance(seller_obj, dict) else None
+
+                    # category — OzonV2Product.category_path[-1].name
+                    cat_path = bh_data.get("category_path") or []
+                    category = cat_path[-1].get("name") if cat_path and isinstance(cat_path[-1], dict) else None
+
+                    # characteristics — OzonV2Product.characteristics.items[]
+                    # Each item: {id, name, values: [str]}
+                    chars_obj = bh_data.get("characteristics") or {}
+                    chars_items = (
+                        chars_obj.get("items") if isinstance(chars_obj, dict)
+                        else chars_obj if isinstance(chars_obj, list)
+                        else []
+                    )
+                    specs: Dict[str, str] = {}
+                    for item in chars_items:
+                        if not isinstance(item, dict):
+                            continue
+                        name_k = item.get("name")
+                        values_v = item.get("values") or []
+                        if name_k and values_v:
+                            specs[str(name_k)] = ", ".join(str(v) for v in values_v if v)
+
+                    # Add summary fields to specs
+                    if brand:
+                        specs.setdefault("Brand", brand)
+                    if seller_name:
+                        specs.setdefault("Seller", seller_name)
+                    if category:
+                        specs.setdefault("Category", category)
+                    if rating_val:
+                        r_str = f"★ {rating_val}"
+                        if review_count:
+                            r_str += f" ({review_count} reviews)"
+                        specs.setdefault("Rating", r_str)
+                    bh_sku = bh_data.get("sku") or sku
+                    if bh_sku:
+                        specs.setdefault("SKU", str(bh_sku))
 
                     details = []
                     if price:
                         details.append(f"Price: {price}")
                     if brand:
                         details.append(f"Brand: {brand}")
-                    if rating:
-                        rating_str = f"★ {rating}"
-                        if reviews_count:
-                            rating_str += f" ({reviews_count} reviews)"
+                    if rating_val:
+                        rating_str = f"★ {rating_val}"
+                        if review_count:
+                            rating_str += f" ({review_count} reviews)"
                         details.append(rating_str)
 
                     description_parts = []
