@@ -23,7 +23,7 @@ class BhapiClient:
 
     async def get_ozon_product(self, url: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch Ozon product details by URL using BHAPI v2 (fallback to v1).
+        Fetch Ozon product details by URL using official BHAPI Ozon endpoint (v1 as per /docs/ozon, fallback to v2).
         """
         if not self.is_configured():
             logger.warning("BHAPI_TOKEN is not configured! Please provide BHAPI_TOKEN in .env to enable Ozon extraction.")
@@ -32,12 +32,13 @@ class BhapiClient:
         headers = self._get_headers()
         payload = {"url": url, "no_cache": False}
 
+        # v1 is the official documented endpoint at https://bhapi.ru/docs/ozon
         endpoints = [
-            f"{self.base_url}/ozon/api/v2/item/detail-by-url",
             f"{self.base_url}/ozon/api/v1/item/detail-by-url",
+            f"{self.base_url}/ozon/api/v2/item/detail-by-url",
         ]
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             for endpoint in endpoints:
                 try:
                     resp = await client.post(endpoint, json=payload, headers=headers)
@@ -45,7 +46,13 @@ class BhapiClient:
                         data = resp.json()
                         if isinstance(data, dict):
                             item = data.get("data") or data.get("item") or data
-                            if isinstance(item, dict) and (item.get("name") or item.get("title") or item.get("sku")):
+                            if isinstance(item, dict) and (
+                                item.get("name")
+                                or item.get("title")
+                                or item.get("sku")
+                                or item.get("item_id")
+                                or item.get("product_url")
+                            ):
                                 return item
                             return data
                     else:

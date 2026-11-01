@@ -194,4 +194,9 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Added explicit logger warnings in `BhapiClient` when `BHAPI_TOKEN` is missing or when BHAPI responds with HTTP error codes (e.g. 401 Unauthorized / 403 Forbidden).
     - Enhanced `_extract_specs_from_dict` to automatically unwrap `{"items": [...]}` container dictionaries and supported dict payloads in `_format_price`.
     - Added `.env.example` templates in root and `backend/`.
+  - **Ozon Official Docs Alignment (https://bhapi.ru/docs/ozon)**:
+    - Implemented full support for official Ozon V1 endpoint (`/ozon/api/v1/item/detail-by-url`): extracts characteristics from `product_props` (`[{"name": "...", "value": "..."}]`), price from `price_info.sale_price` / `normal_sale_price`, photos from `main_imgs[0]`, rating from `review_info.rating_star` / `review_count`, seller from `shop_info.shop_name`, description from `desc`, SKU from `item_id`.
+    - Maintained full backwards-compatibility with V2 schema (`/ozon/api/v2/item/detail-by-url`).
+    - Increased BHAPI client timeout to 30s to allow scraping upstream Ozon responses reliably.
+    - Added dedicated automated test `test_bhapi_ozon_v1_docs_format` verifying the official V1 docs schema. All 17 automated tests pass.
   - **All 48 tasks and GitHub issues across all iterations are now 100% complete and closed.**

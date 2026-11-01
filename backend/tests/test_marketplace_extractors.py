@@ -86,6 +86,56 @@ async def test_bhapi_ozon_extractor_success():
 
 
 @pytest.mark.anyio
+async def test_bhapi_ozon_v1_docs_format():
+    """Verify Ozon V1 response format matching https://bhapi.ru/docs/ozon."""
+    mock_client = BhapiClient(token="test_token")
+    mock_ozon_v1 = {
+        "item_id": "987654321",
+        "product_url": "https://www.ozon.ru/product/primer-tovara-987654321/",
+        "title": "Хлопковая футболка оверсайз",
+        "currency": "RUB",
+        "brand": "BasicWear",
+        "price_info": {
+            "sale_price": "1517",
+            "normal_sale_price": "1685",
+            "origin_price": "2200",
+        },
+        "main_imgs": ["https://ir.ozone.ru/example/item.jpg"],
+        "category_id": "31510",
+        "category_path": [{"name": "Одежда"}, {"name": "Футболки"}],
+        "product_props": [
+            {"name": "Материал", "value": "100% Хлопок"},
+            {"name": "Цвет", "value": "Белый"},
+            {"name": "Страна-изготовитель", "value": "Турция"},
+        ],
+        "shop_info": {
+            "shop_name": "BasicWear Official",
+            "shop_logo": "https://ir.ozone.ru/example/shop.png",
+        },
+        "review_info": {"rating_star": 4.8, "review_count": 52},
+        "desc": "Стильная хлопковая футболка на каждый день.",
+    }
+
+    with patch.object(mock_client, "get_ozon_product", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_ozon_v1
+        extractor = OzonExtractor(client=mock_client)
+        meta = await extractor.extract("https://www.ozon.ru/product/primer-tovara-987654321/")
+
+        assert meta.site_type == SiteType.ozon
+        assert "Хлопковая футболка" in meta.title
+        assert meta.price == "1 517 ₽"
+        assert meta.image_url == "https://ir.ozone.ru/example/item.jpg"
+        assert meta.specs is not None
+        assert meta.specs.get("Brand") == "BasicWear"
+        assert meta.specs.get("Материал") == "100% Хлопок"
+        assert meta.specs.get("Цвет") == "Белый"
+        assert meta.specs.get("Страна-изготовитель") == "Турция"
+        assert meta.specs.get("Seller") == "BasicWear Official"
+        assert meta.specs.get("Category") == "Футболки"
+        assert meta.specs.get("SKU") == "987654321"
+
+
+@pytest.mark.anyio
 async def test_bhapi_wb_extractor_success():
     mock_client = BhapiClient(token="test_token")
     mock_wb_data = {
