@@ -190,4 +190,8 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Updated UI label in `LinkCard.tsx` from "Характеристики" to "Details".
     - Standardized internal specification keys to English (`Brand`, `SKU`, `Article`, `Item ID`, `Rating`, `Seller`, `Category`).
     - Updated unit test mocks in `test_marketplace_extractors.py` matching the real `OzonV2Product` structure. All 16 automated tests pass and frontend Vite build succeeds.
+    - Added multi-path `.env` discovery (`.env`, `backend/.env`, `../.env`) in Pydantic settings.
+    - Added explicit logger warnings in `BhapiClient` when `BHAPI_TOKEN` is missing or when BHAPI responds with HTTP error codes (e.g. 401 Unauthorized / 403 Forbidden).
+    - Enhanced `_extract_specs_from_dict` to automatically unwrap `{"items": [...]}` container dictionaries and supported dict payloads in `_format_price`.
+    - Added `.env.example` templates in root and `backend/`.
   - **All 48 tasks and GitHub issues across all iterations are now 100% complete and closed.**

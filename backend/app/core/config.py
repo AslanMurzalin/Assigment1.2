@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     BHAPI_TOKEN: str = ""
     BHAPI_BASE_URL: str = "https://bhapi.ru"
 
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=(".env", "backend/.env", "../.env"),
+        extra="ignore",
+    )
 
 settings = Settings()

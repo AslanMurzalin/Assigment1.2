@@ -121,12 +121,22 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
    pip install -r requirements.txt
    ```
 
-3. **Run the FastAPI development server**:
+3. **Configure Environment Variables (Optional for Marketplaces)**:
+   Create `.env` inside `backend/` (or copy `.env.example`):
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+   To enable direct marketplace parsing for Ozon, Wildberries, and AliExpress, add your BHAPI token:
+   ```env
+   BHAPI_TOKEN=your_bhapi_token_here
+   ```
+
+4. **Run the FastAPI development server**:
    ```bash
    uvicorn app.main:app --reload --port 8000
    ```
 
-4. **Verify the API**:
+5. **Verify the API**:
    - Interactive Swagger Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
    - ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
    - Health Check: [http://localhost:8000/health](http://localhost:8000/health)

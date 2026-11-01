@@ -27,6 +27,16 @@ def _format_price(raw_price: Any) -> Optional[str]:
     """Format numeric or string price into a readable rubles string."""
     if raw_price is None:
         return None
+    if isinstance(raw_price, dict):
+        raw_price = (
+            raw_price.get("regular")
+            or raw_price.get("bank_card")
+            or raw_price.get("price")
+            or raw_price.get("value")
+            or raw_price.get("amount")
+        )
+        if raw_price is None:
+            return None
     try:
         if isinstance(raw_price, (int, float)):
             val = int(raw_price)
@@ -119,17 +129,23 @@ def _extract_specs_from_dict(data: Dict[str, Any]) -> Dict[str, str]:
         if not chars:
             continue
         if isinstance(chars, dict):
-            for k, v in chars.items():
-                if isinstance(v, (str, int, float)) and v and str(k).strip() not in specs:
-                    specs[str(k).strip()] = str(v).strip()
-        elif isinstance(chars, list):
+            # Handle wrapper dicts like {"total_count": 10, "items": [...]} or {"characteristics": [...]}
+            if "items" in chars and isinstance(chars["items"], list):
+                chars = chars["items"]
+            elif "list" in chars and isinstance(chars["list"], list):
+                chars = chars["list"]
+            else:
+                for k, v in chars.items():
+                    if isinstance(v, (str, int, float)) and v and str(k).strip() not in specs:
+                        specs[str(k).strip()] = str(v).strip()
+        if isinstance(chars, list):
             for item in chars:
                 if isinstance(item, dict):
                     k = (item.get("name") or item.get("key") or item.get("title")
                          or item.get("param_name") or item.get("attribute_name"))
                     v = item.get("value") or item.get("val") or item.get("values")
                     if isinstance(v, list) and v:
-                        v = ", ".join(str(x) for x in v)
+                        v = ", ".join(str(x) for x in v if x is not None)
                     if k and v and str(k).strip() not in specs:
                         specs[str(k).strip()] = str(v).strip()
 

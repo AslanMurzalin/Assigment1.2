@@ -26,6 +26,7 @@ class BhapiClient:
         Fetch Ozon product details by URL using BHAPI v2 (fallback to v1).
         """
         if not self.is_configured():
+            logger.warning("BHAPI_TOKEN is not configured! Please provide BHAPI_TOKEN in .env to enable Ozon extraction.")
             return None
 
         headers = self._get_headers()
@@ -47,6 +48,13 @@ class BhapiClient:
                             if isinstance(item, dict) and (item.get("name") or item.get("title") or item.get("sku")):
                                 return item
                             return data
+                    else:
+                        logger.warning(
+                            "BHAPI Ozon request to %s returned HTTP %d: %s",
+                            endpoint,
+                            resp.status_code,
+                            resp.text[:200],
+                        )
                 except Exception as e:
                     logger.warning("BHAPI Ozon request to %s failed: %s", endpoint, e)
 
@@ -57,6 +65,7 @@ class BhapiClient:
         Fetch Wildberries product details by URL using BHAPI.
         """
         if not self.is_configured():
+            logger.warning("BHAPI_TOKEN is not configured! Please provide BHAPI_TOKEN in .env to enable WB BHAPI extraction.")
             return None
 
         headers = self._get_headers()
@@ -70,6 +79,8 @@ class BhapiClient:
                     data = resp.json()
                     if isinstance(data, dict):
                         return data.get("data") or data.get("item") or data
+                else:
+                    logger.warning("BHAPI WB GET request returned HTTP %d: %s", resp.status_code, resp.text[:200])
             except Exception as e:
                 logger.warning("BHAPI WB GET request failed: %s", e)
 
@@ -81,6 +92,8 @@ class BhapiClient:
                     data = resp.json()
                     if isinstance(data, dict):
                         return data.get("data") or data.get("item") or data
+                else:
+                    logger.warning("BHAPI WB POST request returned HTTP %d: %s", resp.status_code, resp.text[:200])
             except Exception as e:
                 logger.warning("BHAPI WB POST request failed: %s", e)
 
@@ -91,6 +104,7 @@ class BhapiClient:
         Fetch AliExpress product details via BHAPI if supported.
         """
         if not self.is_configured():
+            logger.warning("BHAPI_TOKEN is not configured! Please provide BHAPI_TOKEN in .env to enable AliExpress BHAPI extraction.")
             return None
 
         headers = self._get_headers()
