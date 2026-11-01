@@ -15,6 +15,9 @@ export interface Link {
   siteType: SiteType;
   userNotes: string;
   tags: string[];
+  imageUrl?: string | null;
+  price?: string | null;
+  specs?: Record<string, string> | null;
   createdAt: string;
   updatedAt?: string;
 }

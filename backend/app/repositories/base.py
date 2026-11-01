@@ -29,6 +29,9 @@ class AbstractLinkRepository(ABC):
         site_type: SiteType,
         user_notes: str,
         tags: List[str],
+        image_url: Optional[str] = None,
+        price: Optional[str] = None,
+        specs: Optional[dict] = None,
     ) -> LinkRead:
         pass
 

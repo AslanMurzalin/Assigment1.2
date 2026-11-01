@@ -12,6 +12,9 @@ import {
   FileText,
   CheckCircle2,
   ShoppingBag,
+  Tag as TagIcon,
+  ChevronDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 interface LinkCardProps {
@@ -53,6 +56,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showSpecs, setShowSpecs] = useState(false);
 
   // Warn user before page refresh/close during active download
   useEffect(() => {
@@ -173,6 +177,31 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           </div>
         </div>
 
+        {/* Product Photo / Thumbnail */}
+        {link.imageUrl && (
+          <div className="mb-3 rounded-xl overflow-hidden border border-stone-200/80 bg-stone-50/50 flex items-center justify-center p-1.5 max-h-48">
+            <img
+              src={link.imageUrl}
+              alt={link.title}
+              className="w-full h-40 object-contain rounded-lg transition-transform duration-200 group-hover:scale-[1.02]"
+              loading="lazy"
+              onError={(e) => {
+                (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        {/* Product Price Tag */}
+        {link.price && (
+          <div className="mb-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-bold bg-orange-50 text-orange-700 border border-orange-200 shadow-xs">
+              <TagIcon className="w-3.5 h-3.5 text-orange-600" />
+              {link.price}
+            </span>
+          </div>
+        )}
+
         {/* Title */}
         <h3 className="font-semibold text-stone-900 text-base leading-snug mb-1 line-clamp-2">
           <a
@@ -195,6 +224,35 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           <span className="truncate max-w-[280px] sm:max-w-[400px]">{link.url}</span>
           <ExternalLink className="w-3 h-3 shrink-0" />
         </a>
+
+        {/* Product Characteristics (Характеристики) */}
+        {link.specs && Object.keys(link.specs).length > 0 && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setShowSpecs(!showSpecs)}
+              className="text-xs font-medium text-stone-600 hover:text-orange-600 inline-flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-orange-50 transition"
+              title="Показать / скрыть характеристики"
+            >
+              <SlidersHorizontal className="w-3 h-3 text-stone-400" />
+              <span>Характеристики ({Object.keys(link.specs).length})</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showSpecs ? 'rotate-180 text-orange-600' : 'text-stone-400'}`} />
+            </button>
+
+            {showSpecs && (
+              <div className="mt-1.5 p-3 bg-stone-50 rounded-xl border border-stone-200/80 text-xs text-stone-700">
+                <dl className="grid grid-cols-1 gap-y-1.5">
+                  {Object.entries(link.specs).map(([specKey, specVal]) => (
+                    <div key={specKey} className="flex items-baseline justify-between gap-3 border-b border-stone-200/50 pb-1 last:border-0 last:pb-0">
+                      <dt className="text-stone-500 font-medium truncate max-w-[45%]">{specKey}:</dt>
+                      <dd className="text-stone-900 font-semibold text-right truncate max-w-[55%]">{specVal}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* User Notes */}
         {link.userNotes && (

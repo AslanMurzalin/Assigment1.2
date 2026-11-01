@@ -25,11 +25,15 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
 1. **User Authentication & Session Management**:
    - Secure registration, login, and profile retrieval via JWT Bearer tokens.
    - User-scoped data isolation (users cannot access, update, or delete other users' links).
-2. **Automated Metadata Extraction & Marketplace Integration**:
+2. **Automated Metadata Extraction & Marketplace Product Parser**:
    - Save links with instant server-side metadata fetching.
    - Domain-based dispatching for YouTube videos, e-commerce marketplaces (Ozon, Wildberries, AliExpress), and generic websites.
-   - **BHAPI (bhapi.ru) E-commerce Integration**: Dedicated product extraction for Ozon and Wildberries cards, retrieving product names, brands, prices in rubles, ratings, review counts, and descriptions.
-   - Seamless fallback parser: Automatically extracts OpenGraph metadata and JSON-LD product schemas when BHAPI tokens are not configured or external service limits are reached.
+   - **Full Marketplace Product Data Extraction**:
+     - **Название (Title)**: Clean product name.
+     - **Цена (Price)**: Formatted price tag in rubles with badge styling.
+     - **Фото (Photos)**: High-resolution product images (including WB CDN auto-generation and OpenGraph image parsing).
+     - **Характеристики (Characteristics)**: Structured key-value specifications (brand, color, material, specs) with an interactive expandable UI.
+   - **BHAPI (bhapi.ru) Integration**: Direct parsing for Ozon and Wildberries via BHAPI with seamless fallback to public catalog APIs and Schema.org JSON-LD structured data.
    - Distinct visual marketplace badges (Ozon Blue, Wildberries Purple, AliExpress Amber) rendered in the user interface.
 3. **Normalized Relational Tags ($M:N$)**:
    - Tags are stored uniquely in `tags` and linked via `link_tags` junction table.

@@ -64,6 +64,9 @@ class InMemoryLinkRepository(AbstractLinkRepository):
         site_type: SiteType,
         user_notes: str,
         tags: List[str],
+        image_url: Optional[str] = None,
+        price: Optional[str] = None,
+        specs: Optional[dict] = None,
     ) -> LinkRead:
         link_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
@@ -76,6 +79,9 @@ class InMemoryLinkRepository(AbstractLinkRepository):
             "site_type": site_type,
             "user_notes": user_notes,
             "tags": [t.strip().lower() for t in tags if t.strip()],
+            "image_url": image_url,
+            "price": price,
+            "specs": specs,
             "created_at": now,
             "updated_at": None,
         }

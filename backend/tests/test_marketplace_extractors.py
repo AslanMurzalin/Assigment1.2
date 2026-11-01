@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from httpx import Response
 from app.schemas.link import SiteType
 from app.services.extractors.dispatcher import metadata_extractor_service
 from app.services.extractors.bhapi import BhapiClient
@@ -44,6 +43,11 @@ async def test_bhapi_ozon_extractor_success():
         "brand": "Sony",
         "rating": 4.9,
         "reviews_count": 842,
+        "main_image": "https://cdn1.ozon.ru/multimedia/10000000.jpg",
+        "characteristics": {
+            "Тип": "Полноразмерные",
+            "Шумоподавление": "Активное",
+        },
         "description": "Флагманские наушники с шумоподавлением.",
     }
 
@@ -54,9 +58,11 @@ async def test_bhapi_ozon_extractor_success():
 
         assert meta.site_type == SiteType.ozon
         assert "Sony WH-1000XM4" in meta.title
-        assert "24 990 ₽" in meta.description
-        assert "Sony" in meta.description
-        assert "4.9" in meta.description
+        assert meta.price == "24 990 ₽"
+        assert meta.image_url == "https://cdn1.ozon.ru/multimedia/10000000.jpg"
+        assert meta.specs is not None
+        assert meta.specs.get("Бренд") == "Sony"
+        assert meta.specs.get("Шумоподавление") == "Активное"
 
 
 @pytest.mark.anyio
@@ -68,6 +74,11 @@ async def test_bhapi_wb_extractor_success():
         "brand": "Streetwear",
         "review_rating": 4.8,
         "feedbacks_count": 124,
+        "photos": ["https://basket-01.wbbasket.ru/vol987/part98765/98765432/images/big/1.webp"],
+        "options": [
+            {"name": "Состав", "value": "Хлопок 80%, полиэстер 20%"},
+            {"name": "Цвет", "value": "Графитовый"},
+        ],
         "description": "Теплое и стильное худи.",
     }
 
@@ -78,9 +89,11 @@ async def test_bhapi_wb_extractor_success():
 
         assert meta.site_type == SiteType.wildberries
         assert "Худи оверсайз" in meta.title
-        assert "2 890 ₽" in meta.description
-        assert "Streetwear" in meta.description
-        assert "4.8" in meta.description
+        assert meta.price == "2 890 ₽"
+        assert meta.image_url == "https://basket-01.wbbasket.ru/vol987/part98765/98765432/images/big/1.webp"
+        assert meta.specs is not None
+        assert meta.specs.get("Бренд") == "Streetwear"
+        assert meta.specs.get("Состав") == "Хлопок 80%, полиэстер 20%"
 
 
 @pytest.mark.anyio
@@ -92,6 +105,11 @@ async def test_bhapi_aliexpress_extractor_success():
         "store_name": "TechGlobal Store",
         "rating": 4.7,
         "orders": 1500,
+        "image": "https://ae01.alicdn.com/kf/S123456789.jpg",
+        "properties": {
+            "Свитчи": "Gateron Yellow",
+            "Подключение": "Type-C / 2.4G",
+        },
         "description": "Горячая замена свитчей и настраиваемая подсветка.",
     }
 
@@ -102,8 +120,10 @@ async def test_bhapi_aliexpress_extractor_success():
 
         assert meta.site_type == SiteType.aliexpress
         assert "Механическая клавиатура RGB" in meta.title
-        assert "3 450 ₽" in meta.description
-        assert "TechGlobal Store" in meta.description
+        assert meta.price == "3 450 ₽"
+        assert meta.image_url == "https://ae01.alicdn.com/kf/S123456789.jpg"
+        assert meta.specs is not None
+        assert meta.specs.get("Свитчи") == "Gateron Yellow"
 
 
 @pytest.mark.anyio
@@ -122,6 +142,7 @@ async def test_marketplace_fallback_without_bhapi_token():
     wb_meta = await wb_extractor.extract("https://www.wildberries.ru/catalog/88889999/detail.aspx")
     assert wb_meta.site_type == SiteType.wildberries
     assert "Wildberries" in wb_meta.title or "88889999" in wb_meta.title
+    assert wb_meta.image_url is not None  # WB CDN fallback image generated
 
     ali_meta = await ali_extractor.extract("https://aliexpress.ru/item/100500444555.html")
     assert ali_meta.site_type == SiteType.aliexpress
@@ -135,7 +156,7 @@ def test_api_create_marketplace_links():
     client = TestClient(app)
 
     # 1. Register & login
-    email = "marketplace_tester@example.com"
+    email = "full_marketplace_tester@example.com"
     pwd = "Password123!"
     client.post("/api/v1/auth/signup", json={"email": email, "password": pwd})
     login_resp = client.post("/api/v1/auth/login", json={"email": email, "password": pwd})
@@ -149,7 +170,12 @@ def test_api_create_marketplace_links():
         headers=headers,
     )
     assert ozon_resp.status_code == 201
-    assert ozon_resp.json()["site_type"] == "ozon"
+    ozon_data = ozon_resp.json()
+    assert ozon_data["site_type"] == "ozon"
+    assert "title" in ozon_data
+    assert "image_url" in ozon_data
+    assert "price" in ozon_data
+    assert "specs" in ozon_data
 
     # 3. Create Wildberries link
     wb_resp = client.post(
@@ -158,7 +184,9 @@ def test_api_create_marketplace_links():
         headers=headers,
     )
     assert wb_resp.status_code == 201
-    assert wb_resp.json()["site_type"] == "wildberries"
+    wb_data = wb_resp.json()
+    assert wb_data["site_type"] == "wildberries"
+    assert "image_url" in wb_data
 
     # 4. Create AliExpress link
     ali_resp = client.post(
@@ -167,5 +195,6 @@ def test_api_create_marketplace_links():
         headers=headers,
     )
     assert ali_resp.status_code == 201
-    assert ali_resp.json()["site_type"] == "aliexpress"
-
+    ali_data = ali_resp.json()
+    assert ali_data["site_type"] == "aliexpress"
+    assert "specs" in ali_data

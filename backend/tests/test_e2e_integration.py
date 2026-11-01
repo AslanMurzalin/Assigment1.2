@@ -16,20 +16,22 @@ client = TestClient(app)
 @pytest.fixture(scope="module", autouse=True)
 def init_db():
     Base.metadata.create_all(bind=engine)
+    def _cleanup():
+        db = SessionLocal()
+        try:
+            user = db.query(UserModel).filter(UserModel.email == "e2e_user@example.com").first()
+            if user:
+                links = db.query(LinkModel).filter(LinkModel.user_id == user.id).all()
+                for l in links:
+                    db.delete(l)
+                db.delete(user)
+                db.commit()
+        finally:
+            db.close()
+
+    _cleanup()
     yield
-    # Cleanup integration test records
-    db = SessionLocal()
-    try:
-        user = db.query(UserModel).filter(UserModel.email == "e2e_user@example.com").first()
-        if user:
-            # Delete links belonging to this user
-            links = db.query(LinkModel).filter(LinkModel.user_id == user.id).all()
-            for l in links:
-                db.delete(l)
-            db.delete(user)
-            db.commit()
-    finally:
-        db.close()
+    _cleanup()
 
 def test_e2e_full_lifecycle():
     # 1. Health check

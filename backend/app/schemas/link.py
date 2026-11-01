@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, ConfigDict
 
 class SiteType(str, Enum):
@@ -28,6 +28,9 @@ class LinkRead(BaseModel):
     site_type: SiteType
     user_notes: str
     tags: List[str]
+    image_url: Optional[str] = None
+    price: Optional[str] = None
+    specs: Optional[Dict[str, str]] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

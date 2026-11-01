@@ -14,6 +14,9 @@ class LinkModel(Base):
     description = Column(Text, default="", nullable=False)
     site_type = Column(String, default="generic", nullable=False)
     user_notes = Column(Text, default="", nullable=False)
+    image_url = Column(String, nullable=True, default=None)
+    price = Column(String, nullable=True, default=None)
+    specs = Column(Text, nullable=True, default=None)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = Column(DateTime, nullable=True)
 

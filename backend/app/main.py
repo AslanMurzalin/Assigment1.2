@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import engine, Base
 import app.models  # Ensure all models are registered with Base metadata
@@ -12,6 +13,20 @@ from app.api.v1.downloads import router as downloads_router
 async def lifespan(app: FastAPI):
     # Auto-create tables on startup
     Base.metadata.create_all(bind=engine)
+    # Check and add any missing columns in links table for SQLite
+    with engine.connect() as conn:
+        try:
+            result = conn.execute(text("PRAGMA table_info(links)"))
+            existing_cols = {row[1] for row in result.fetchall()}
+            if "image_url" not in existing_cols:
+                conn.execute(text("ALTER TABLE links ADD COLUMN image_url VARCHAR"))
+            if "price" not in existing_cols:
+                conn.execute(text("ALTER TABLE links ADD COLUMN price VARCHAR"))
+            if "specs" not in existing_cols:
+                conn.execute(text("ALTER TABLE links ADD COLUMN specs TEXT"))
+            conn.commit()
+        except Exception:
+            pass
     yield
 
 app = FastAPI(

@@ -98,7 +98,13 @@ export class MockLinkService implements ILinkService {
     return 'generic';
   }
 
-  private mockExtractMetadata(url: string, siteType: SiteType): { title: string; description: string } {
+  private mockExtractMetadata(url: string, siteType: SiteType): {
+    title: string;
+    description: string;
+    imageUrl?: string;
+    price?: string;
+    specs?: Record<string, string>;
+  } {
     try {
       const parsed = new URL(url);
       const host = parsed.hostname.replace(/^www\./, '');
@@ -110,20 +116,45 @@ export class MockLinkService implements ILinkService {
       }
       if (siteType === 'ozon') {
         return {
-          title: `Ozon Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Каталог'}`,
-          description: `Ozon Маркетплейс | Цена: 1 490 ₽ | Рейтинг: ★ 4.8. Доставка Ozon Rocket.`,
+          title: `Беспроводные наушники Sony WH-1000XM4 – Ozon`,
+          description: `Ozon Маркетплейс | Цена: 24 990 ₽ | Рейтинг: ★ 4.9 (842 отзыва).`,
+          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
+          price: '24 990 ₽',
+          specs: {
+            Бренд: 'Sony',
+            Модель: 'WH-1000XM4',
+            Тип: 'Полноразмерные',
+            Шумоподавление: 'Активное (ANC)',
+            Время_работы: 'До 30 часов',
+          },
         };
       }
       if (siteType === 'wildberries') {
         return {
-          title: `Wildberries Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Артикул'}`,
-          description: `Wildberries Маркетплейс | Цена: 2 150 ₽ | Рейтинг: ★ 4.9. В наличии на складе.`,
+          title: `Худи оверсайз с начесом – Wildberries`,
+          description: `Wildberries Маркетплейс | Цена: 2 890 ₽ | Рейтинг: ★ 4.8 (124 отзыва).`,
+          imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80',
+          price: '2 890 ₽',
+          specs: {
+            Бренд: 'Streetwear Co',
+            Состав: 'Хлопок 80%, полиэстер 20%',
+            Цвет: 'Графитовый',
+            Сезон: 'Демисезон / Зима',
+          },
         };
       }
       if (siteType === 'aliexpress') {
         return {
-          title: `AliExpress Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Item'}`,
-          description: `AliExpress Global | Цена: 890 ₽ | Бесплатная доставка.`,
+          title: `Механическая клавиатура RGB Hot-Swap – AliExpress`,
+          description: `AliExpress Global | Цена: 3 450 ₽ | 1500 заказов.`,
+          imageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&q=80',
+          price: '3 450 ₽',
+          specs: {
+            Магазин: 'TechGlobal Store',
+            Свитчи: 'Gateron Yellow',
+            Подключение: 'Type-C / Bluetooth 5.0 / 2.4G',
+            Подсветка: 'RGB 16.8M цветов',
+          },
         };
       }
       const pathSnippet = parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Homepage';
@@ -187,6 +218,9 @@ export class MockLinkService implements ILinkService {
       siteType,
       userNotes: (input.userNotes || '').trim(),
       tags: (input.tags || []).map((t) => t.trim().toLowerCase()).filter(Boolean),
+      imageUrl: meta.imageUrl,
+      price: meta.price,
+      specs: meta.specs,
       createdAt: new Date().toISOString(),
     };
 

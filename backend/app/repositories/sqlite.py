@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -76,6 +77,13 @@ class SQLiteLinkRepository(AbstractLinkRepository):
         return tag_models
 
     def _to_schema(self, model: LinkModel) -> LinkRead:
+        parsed_specs = None
+        if getattr(model, "specs", None):
+            try:
+                parsed_specs = json.loads(model.specs)
+            except Exception:
+                parsed_specs = None
+
         return LinkRead(
             id=model.id,
             user_id=model.user_id,
@@ -85,6 +93,9 @@ class SQLiteLinkRepository(AbstractLinkRepository):
             site_type=SiteType(model.site_type),
             user_notes=model.user_notes,
             tags=[t.name for t in model.tags],
+            image_url=getattr(model, "image_url", None),
+            price=getattr(model, "price", None),
+            specs=parsed_specs,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
@@ -98,8 +109,12 @@ class SQLiteLinkRepository(AbstractLinkRepository):
         site_type: SiteType,
         user_notes: str,
         tags: List[str],
+        image_url: Optional[str] = None,
+        price: Optional[str] = None,
+        specs: Optional[dict] = None,
     ) -> LinkRead:
         tag_models = self._get_or_create_tags(tags)
+        specs_json = json.dumps(specs, ensure_ascii=False) if specs else None
         new_link = LinkModel(
             id=str(uuid.uuid4()),
             user_id=user_id,
@@ -109,6 +124,9 @@ class SQLiteLinkRepository(AbstractLinkRepository):
             site_type=site_type.value,
             user_notes=user_notes,
             tags=tag_models,
+            image_url=image_url,
+            price=price,
+            specs=specs_json,
             created_at=datetime.now(timezone.utc),
         )
         self.db.add(new_link)

@@ -28,6 +28,9 @@ class LinkService:
             site_type=metadata.site_type,
             user_notes=link_in.user_notes or "",
             tags=link_in.tags or [],
+            image_url=metadata.image_url,
+            price=metadata.price,
+            specs=metadata.specs,
         )
 
     async def list_links(

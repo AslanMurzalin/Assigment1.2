@@ -18,6 +18,9 @@ interface BackendLinkRead {
   site_type: string;
   user_notes: string | null;
   tags: string[];
+  image_url?: string | null;
+  price?: string | null;
+  specs?: Record<string, string> | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -31,6 +34,9 @@ const mapLink = (l: BackendLinkRead): Link => ({
   siteType: (l.site_type || 'generic') as SiteType,
   userNotes: l.user_notes || '',
   tags: Array.isArray(l.tags) ? l.tags : [],
+  imageUrl: l.image_url || undefined,
+  price: l.price || undefined,
+  specs: l.specs || undefined,
   createdAt: l.created_at,
   updatedAt: l.updated_at || undefined,
 });

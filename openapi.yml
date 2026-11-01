@@ -459,6 +459,22 @@ components:
           items:
             type: string
           example: ["music", "80s"]
+        image_url:
+          type: string
+          nullable: true
+          example: https://basket-01.wbbasket.ru/vol123/part12345/12345678/images/big/1.webp
+        price:
+          type: string
+          nullable: true
+          example: 2 490 ₽
+        specs:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
+          example:
+            Бренд: Apple
+            Цвет: Черный
         created_at:
           type: string
           format: date-time
