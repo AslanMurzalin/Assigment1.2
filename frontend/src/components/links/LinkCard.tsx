@@ -11,6 +11,7 @@ import {
   Calendar,
   FileText,
   CheckCircle2,
+  ShoppingBag,
 } from 'lucide-react';
 
 interface LinkCardProps {
@@ -121,6 +122,21 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                 <Video className="w-3.5 h-3.5 text-red-600 fill-current" />
                 YouTube (720p)
+              </span>
+            ) : link.siteType === 'ozon' ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                <ShoppingBag className="w-3.5 h-3.5 text-blue-600" />
+                Ozon
+              </span>
+            ) : link.siteType === 'wildberries' ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                <ShoppingBag className="w-3.5 h-3.5 text-purple-600" />
+                Wildberries
+              </span>
+            ) : link.siteType === 'aliexpress' ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
+                AliExpress
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-stone-100 text-stone-700 border border-stone-200">
@@ -264,6 +280,17 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               <span>Download (720p Stream)</span>
             </button>
           )
+        ) : link.siteType === 'ozon' || link.siteType === 'wildberries' || link.siteType === 'aliexpress' ? (
+          <div className="text-[11px] text-orange-600 font-medium flex items-center gap-1.5 py-1">
+            <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
+            <span>
+              {link.siteType === 'ozon'
+                ? 'Ozon Product'
+                : link.siteType === 'wildberries'
+                ? 'Wildberries Product'
+                : 'AliExpress Product'}
+            </span>
+          </div>
         ) : (
           <div className="text-[11px] text-stone-400 italic">Saved generic URL</div>
         )}

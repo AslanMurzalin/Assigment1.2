@@ -1,4 +1,4 @@
-export type SiteType = 'youtube' | 'generic';
+export type SiteType = 'youtube' | 'generic' | 'ozon' | 'wildberries' | 'aliexpress';
 
 export interface User {
   id: string;

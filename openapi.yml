@@ -383,7 +383,10 @@ components:
       enum:
         - youtube
         - generic
-      example: youtube
+        - ozon
+        - wildberries
+        - aliexpress
+      example: ozon
 
     LinkCreate:
       type: object

@@ -6,6 +6,9 @@ from pydantic import BaseModel, ConfigDict
 class SiteType(str, Enum):
     youtube = "youtube"
     generic = "generic"
+    ozon = "ozon"
+    wildberries = "wildberries"
+    aliexpress = "aliexpress"
 
 class LinkCreate(BaseModel):
     url: str

@@ -82,19 +82,20 @@ export class MockLinkService implements ILinkService {
   }
 
   private inferSiteType(url: string): SiteType {
-    try {
-      const parsed = new URL(url);
-      const host = parsed.hostname.toLowerCase();
-      if (host.includes('youtube.com') || host.includes('youtu.be')) {
-        return 'youtube';
-      }
-      return 'generic';
-    } catch {
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        return 'youtube';
-      }
-      return 'generic';
+    const lower = url.toLowerCase();
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+      return 'youtube';
     }
+    if (lower.includes('ozon.ru') || lower.includes('ozon.by') || lower.includes('ozon.kz')) {
+      return 'ozon';
+    }
+    if (lower.includes('wildberries.ru') || lower.includes('wb.ru') || lower.includes('wildberries.by') || lower.includes('wildberries.kz')) {
+      return 'wildberries';
+    }
+    if (lower.includes('aliexpress.com') || lower.includes('aliexpress.ru') || lower.includes('ali.express')) {
+      return 'aliexpress';
+    }
+    return 'generic';
   }
 
   private mockExtractMetadata(url: string, siteType: SiteType): { title: string; description: string } {
@@ -105,6 +106,24 @@ export class MockLinkService implements ILinkService {
         return {
           title: `YouTube Video: ${parsed.pathname.slice(1) || 'Stream 720p'}`,
           description: `Extracted YouTube video stream metadata from ${host}. Ready for direct 720p on-demand streaming.`,
+        };
+      }
+      if (siteType === 'ozon') {
+        return {
+          title: `Ozon Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Каталог'}`,
+          description: `Ozon Маркетплейс | Цена: 1 490 ₽ | Рейтинг: ★ 4.8. Доставка Ozon Rocket.`,
+        };
+      }
+      if (siteType === 'wildberries') {
+        return {
+          title: `Wildberries Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Артикул'}`,
+          description: `Wildberries Маркетплейс | Цена: 2 150 ₽ | Рейтинг: ★ 4.9. В наличии на складе.`,
+        };
+      }
+      if (siteType === 'aliexpress') {
+        return {
+          title: `AliExpress Товар – ${parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Item'}`,
+          description: `AliExpress Global | Цена: 890 ₽ | Бесплатная доставка.`,
         };
       }
       const pathSnippet = parsed.pathname.split('/').filter(Boolean).slice(-1)[0] || 'Homepage';

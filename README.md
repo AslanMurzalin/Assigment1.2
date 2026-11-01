@@ -25,9 +25,12 @@ Built with a modern **Orange & White** visual identity, clean layered architectu
 1. **User Authentication & Session Management**:
    - Secure registration, login, and profile retrieval via JWT Bearer tokens.
    - User-scoped data isolation (users cannot access, update, or delete other users' links).
-2. **Automated Metadata Extraction**:
+2. **Automated Metadata Extraction & Marketplace Integration**:
    - Save links with instant server-side metadata fetching.
-   - Domain-based dispatching for YouTube videos vs. generic websites.
+   - Domain-based dispatching for YouTube videos, e-commerce marketplaces (Ozon, Wildberries, AliExpress), and generic websites.
+   - **BHAPI (bhapi.ru) E-commerce Integration**: Dedicated product extraction for Ozon and Wildberries cards, retrieving product names, brands, prices in rubles, ratings, review counts, and descriptions.
+   - Seamless fallback parser: Automatically extracts OpenGraph metadata and JSON-LD product schemas when BHAPI tokens are not configured or external service limits are reached.
+   - Distinct visual marketplace badges (Ozon Blue, Wildberries Purple, AliExpress Amber) rendered in the user interface.
 3. **Normalized Relational Tags ($M:N$)**:
    - Tags are stored uniquely in `tags` and linked via `link_tags` junction table.
    - Automatic tag deduplication and reuse across links.
@@ -156,7 +159,7 @@ Run the full pytest suite (In-Memory, SQLite M:N, and End-to-End integration):
 pytest backend/tests/ -v
 ```
 
-All 9 tests pass:
+All 16 tests pass:
 - `test_health_check`
 - `test_auth_flow`
 - `test_links_crud_and_search`
@@ -166,6 +169,13 @@ All 9 tests pass:
 - `test_sqlite_mn_tags_and_deduplication`
 - `test_e2e_full_lifecycle`
 - `test_youtube_streaming_generator`
+- `test_url_domain_classification`
+- `test_format_price`
+- `test_bhapi_ozon_extractor_success`
+- `test_bhapi_wb_extractor_success`
+- `test_bhapi_aliexpress_extractor_success`
+- `test_marketplace_fallback_without_bhapi_token`
+- `test_api_create_marketplace_links`
 
 ---
 
