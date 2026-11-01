@@ -76,35 +76,62 @@ def _extract_specs_from_dict(data: Dict[str, Any]) -> Dict[str, str]:
     specs: Dict[str, str] = {}
 
     # Common direct fields
-    if data.get("brand") or data.get("brand_name"):
-        specs["Бренд"] = str(data.get("brand") or data.get("brand_name"))
-    if data.get("model"):
-        specs["Модель"] = str(data["model"])
-    if data.get("color") or data.get("color_name"):
-        specs["Цвет"] = str(data.get("color") or data.get("color_name"))
-    if data.get("category") or data.get("category_name"):
-        specs["Категория"] = str(data.get("category") or data.get("category_name"))
+    for brand_key in ("brand", "brand_name", "brandName"):
+        if data.get(brand_key):
+            specs["Brand"] = str(data[brand_key])
+            break
+    for model_key in ("model", "model_name"):
+        if data.get(model_key):
+            specs["Model"] = str(data[model_key])
+            break
+    for color_key in ("color", "color_name", "colorName"):
+        if data.get(color_key):
+            specs["Color"] = str(data[color_key])
+            break
+    for cat_key in ("category", "category_name", "categoryName", "type_name"):
+        if data.get(cat_key):
+            specs["Category"] = str(data[cat_key])
+            break
+    if data.get("rating") or data.get("review_rating") or data.get("reviewRating"):
+        r = data.get("rating") or data.get("review_rating") or data.get("reviewRating")
+        feedbacks = data.get("feedbacks_count") or data.get("feedbacks") or data.get("reviews_count")
+        specs["Rating"] = f"★ {r}" + (f" ({feedbacks} reviews)" if feedbacks else "")
+    if data.get("seller") or data.get("store_name") or data.get("merchant"):
+        specs["Seller"] = str(data.get("seller") or data.get("store_name") or data.get("merchant"))
 
-    chars = (
-        data.get("characteristics")
-        or data.get("attributes")
-        or data.get("parameters")
-        or data.get("options")
-        or data.get("properties")
-    )
-    if isinstance(chars, dict):
-        for k, v in chars.items():
-            if isinstance(v, (str, int, float)) and v:
-                specs[str(k).strip()] = str(v).strip()
-    elif isinstance(chars, list):
-        for item in chars:
-            if isinstance(item, dict):
-                k = item.get("name") or item.get("key") or item.get("title") or item.get("param_name")
-                v = item.get("value") or item.get("val") or item.get("values")
-                if isinstance(v, list) and v:
-                    v = ", ".join(str(x) for x in v)
-                if k and v:
+    # Look for characteristics in many possible nested locations
+    chars_candidates = [
+        data.get("characteristics"),
+        data.get("attributes"),
+        data.get("parameters"),
+        data.get("options"),
+        data.get("properties"),
+        data.get("params"),
+        data.get("specs"),
+        # Ozon: items[0].characteristics / attributes
+        (data.get("items") or [{}])[0].get("characteristics") if isinstance(data.get("items"), list) and data.get("items") else None,
+        (data.get("items") or [{}])[0].get("attributes") if isinstance(data.get("items"), list) and data.get("items") else None,
+        # WB: options
+        (data.get("sizes") or [{}])[0].get("characteristics") if isinstance(data.get("sizes"), list) and data.get("sizes") else None,
+    ]
+
+    for chars in chars_candidates:
+        if not chars:
+            continue
+        if isinstance(chars, dict):
+            for k, v in chars.items():
+                if isinstance(v, (str, int, float)) and v and str(k).strip() not in specs:
                     specs[str(k).strip()] = str(v).strip()
+        elif isinstance(chars, list):
+            for item in chars:
+                if isinstance(item, dict):
+                    k = (item.get("name") or item.get("key") or item.get("title")
+                         or item.get("param_name") or item.get("attribute_name"))
+                    v = item.get("value") or item.get("val") or item.get("values")
+                    if isinstance(v, list) and v:
+                        v = ", ".join(str(x) for x in v)
+                    if k and v and str(k).strip() not in specs:
+                        specs[str(k).strip()] = str(v).strip()
 
     return specs
 
@@ -207,18 +234,18 @@ class OzonExtractor(BaseExtractor):
 
                     image_url = _extract_image_from_dict(bh_data)
                     specs = _extract_specs_from_dict(bh_data)
-                    if sku and "Артикул" not in specs:
-                        specs["Артикул / SKU"] = sku
+                    if sku and "SKU" not in specs:
+                        specs["SKU"] = sku
 
                     details = []
                     if price:
-                        details.append(f"Цена: {price}")
+                        details.append(f"Price: {price}")
                     if brand:
-                        details.append(f"Бренд: {brand}")
+                        details.append(f"Brand: {brand}")
                     if rating:
                         rating_str = f"★ {rating}"
                         if reviews_count:
-                            rating_str += f" ({reviews_count} отзывов)"
+                            rating_str += f" ({reviews_count} reviews)"
                         details.append(rating_str)
 
                     description_parts = []
@@ -286,17 +313,17 @@ class OzonExtractor(BaseExtractor):
                             image_url = og_img["content"]
 
                     specs = _extract_specs_from_dict(json_ld)
-                    if sku and "Артикул" not in specs:
-                        specs["Артикул / SKU"] = sku
+                    if sku and "SKU" not in specs:
+                        specs["SKU"] = sku
 
                     details = []
                     if price:
-                        details.append(f"Цена: {price}")
+                        details.append(f"Price: {price}")
                     brand = json_ld.get("brand")
                     if isinstance(brand, dict):
                         brand = brand.get("name")
                     if brand:
-                        details.append(f"Бренд: {brand}")
+                        details.append(f"Brand: {brand}")
 
                     final_desc = " | ".join(details)
                     if desc:
@@ -319,7 +346,7 @@ class OzonExtractor(BaseExtractor):
             site_type=SiteType.ozon,
             image_url=None,
             price=None,
-            specs={"Артикул": sku} if sku else None,
+            specs={"SKU": sku} if sku else None,
         )
 
 
@@ -350,18 +377,18 @@ class WildberriesExtractor(BaseExtractor):
 
                     image_url = _extract_image_from_dict(bh_data) or fallback_image
                     specs = _extract_specs_from_dict(bh_data)
-                    if article and "Артикул" not in specs:
-                        specs["Артикул"] = article
+                    if article and "Article" not in specs:
+                        specs["Article"] = article
 
                     details = []
                     if price:
-                        details.append(f"Цена: {price}")
+                        details.append(f"Price: {price}")
                     if brand:
-                        details.append(f"Бренд: {brand}")
+                        details.append(f"Brand: {brand}")
                     if rating:
                         rating_str = f"★ {rating}"
                         if feedbacks:
-                            rating_str += f" ({feedbacks} отзывов)"
+                            rating_str += f" ({feedbacks} reviews)"
                         details.append(rating_str)
 
                     description_parts = []
@@ -407,25 +434,29 @@ class WildberriesExtractor(BaseExtractor):
                             price = _format_price(price_val // 100 if price_val and price_val > 100000 else price_val)
                             rating = prod.get("rating") or prod.get("reviewRating")
                             feedbacks = prod.get("feedbacks")
+                            colors = prod.get("colors") or []
+                            color_name = colors[0].get("name") if colors and isinstance(colors[0], dict) else None
 
                             title = f"{name} {f'– {brand}' if brand else ''}".strip()
                             details = []
                             if price:
-                                details.append(f"Цена: {price}")
+                                details.append(f"Price: {price}")
                             if brand:
-                                details.append(f"Бренд: {brand}")
+                                details.append(f"Brand: {brand}")
                             if rating:
                                 r_str = f"★ {rating}"
                                 if feedbacks:
-                                    r_str += f" ({feedbacks} отзывов)"
+                                    r_str += f" ({feedbacks} reviews)"
                                 details.append(r_str)
 
-                            final_desc = f"Wildberries (арт. {article}) | " + " | ".join(details)
-                            specs = {"Артикул": article}
+                            final_desc = f"Wildberries (art. {article}) | " + " | ".join(details)
+                            specs: Dict[str, str] = {"Article": article}
                             if brand:
-                                specs["Бренд"] = brand
+                                specs["Brand"] = brand
+                            if color_name:
+                                specs["Color"] = color_name
                             if rating:
-                                specs["Рейтинг"] = str(rating)
+                                specs["Rating"] = f"★ {rating}" + (f" ({feedbacks} reviews)" if feedbacks else "")
 
                             return ExtractedMetadata(
                                 title=title or fallback_title,
@@ -458,7 +489,7 @@ class WildberriesExtractor(BaseExtractor):
                         site_type=SiteType.wildberries,
                         image_url=image_url,
                         price=None,
-                        specs={"Артикул": article} if article else None,
+                        specs={"Article": article} if article else None,
                     )
         except Exception:
             pass
@@ -469,7 +500,7 @@ class WildberriesExtractor(BaseExtractor):
             site_type=SiteType.wildberries,
             image_url=fallback_image,
             price=None,
-            specs={"Артикул": article} if article else None,
+            specs={"Article": article} if article else None,
         )
 
 
@@ -500,17 +531,21 @@ class AliExpressExtractor(BaseExtractor):
                     image_url = _extract_image_from_dict(bh_data)
                     specs = _extract_specs_from_dict(bh_data)
                     if item_id and "Item ID" not in specs:
-                        specs["ID товара"] = item_id
+                        specs["Item ID"] = item_id
+                    if store and "Seller" not in specs:
+                        specs["Seller"] = store
+                    if orders and "Orders" not in specs:
+                        specs["Orders"] = str(orders)
 
                     details = []
                     if price:
-                        details.append(f"Цена: {price}")
+                        details.append(f"Price: {price}")
                     if store:
-                        details.append(f"Магазин: {store}")
+                        details.append(f"Store: {store}")
                     if rating:
                         details.append(f"★ {rating}")
                     if orders:
-                        details.append(f"{orders} заказов")
+                        details.append(f"{orders} orders")
 
                     description_parts = []
                     if details:
@@ -580,17 +615,17 @@ class AliExpressExtractor(BaseExtractor):
                             image_url = og_img["content"]
 
                     specs = _extract_specs_from_dict(json_ld)
-                    if item_id and "ID товара" not in specs:
-                        specs["ID товара"] = item_id
+                    if item_id and "Item ID" not in specs:
+                        specs["Item ID"] = item_id
 
                     details = []
                     if price:
-                        details.append(f"Цена: {price}")
+                        details.append(f"Price: {price}")
                     brand = json_ld.get("brand")
                     if isinstance(brand, dict):
                         brand = brand.get("name")
                     if brand:
-                        details.append(f"Бренд: {brand}")
+                        details.append(f"Brand: {brand}")
 
                     final_desc = " | ".join(details)
                     if desc:

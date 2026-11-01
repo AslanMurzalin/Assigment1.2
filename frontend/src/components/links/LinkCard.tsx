@@ -225,17 +225,17 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           <ExternalLink className="w-3 h-3 shrink-0" />
         </a>
 
-        {/* Product Characteristics (Характеристики) */}
+        {/* Product Details */}
         {link.specs && Object.keys(link.specs).length > 0 && (
           <div className="mb-3">
             <button
               type="button"
               onClick={() => setShowSpecs(!showSpecs)}
               className="text-xs font-medium text-stone-600 hover:text-orange-600 inline-flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-orange-50 transition"
-              title="Показать / скрыть характеристики"
+              title="Show / hide details"
             >
               <SlidersHorizontal className="w-3 h-3 text-stone-400" />
-              <span>Характеристики ({Object.keys(link.specs).length})</span>
+              <span>Details ({Object.keys(link.specs).length})</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showSpecs ? 'rotate-180 text-orange-600' : 'text-stone-400'}`} />
             </button>
 

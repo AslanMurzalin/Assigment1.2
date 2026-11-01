@@ -61,7 +61,7 @@ async def test_bhapi_ozon_extractor_success():
         assert meta.price == "24 990 ₽"
         assert meta.image_url == "https://cdn1.ozon.ru/multimedia/10000000.jpg"
         assert meta.specs is not None
-        assert meta.specs.get("Бренд") == "Sony"
+        assert meta.specs.get("Brand") == "Sony"
         assert meta.specs.get("Шумоподавление") == "Активное"
 
 
@@ -92,7 +92,7 @@ async def test_bhapi_wb_extractor_success():
         assert meta.price == "2 890 ₽"
         assert meta.image_url == "https://basket-01.wbbasket.ru/vol987/part98765/98765432/images/big/1.webp"
         assert meta.specs is not None
-        assert meta.specs.get("Бренд") == "Streetwear"
+        assert meta.specs.get("Brand") == "Streetwear"
         assert meta.specs.get("Состав") == "Хлопок 80%, полиэстер 20%"
 
 
