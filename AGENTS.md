@@ -259,3 +259,10 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Added automatic dialect normalization in `backend/app/db/session.py` and `backend/alembic/env.py` converting `postgres://` or `postgresql://` URIs (Render's default format) to `postgresql+psycopg2://` for SQLAlchemy 1.4+ and Alembic compatibility.
     - Added `RENDER_EXTERNAL_URL` setting and dynamic CORS origin binding in `backend/app/core/config.py` and `backend/app/main.py`.
     - Verified all 17 backend pytest tests and production Vite build pass cleanly.
+  - **GitHub Actions CI/CD Pipeline Implementation**:
+    - Created `.github/workflows/ci.yml` with automated testing and build validation on push and pull requests to `main`.
+    - Configured matrix jobs:
+      - `backend-test`: Ubuntu runner with Python 3.11, installs system `ffmpeg` & `nodejs`, runs all 17 pytest tests.
+      - `frontend-test`: Ubuntu runner with Node 20, type-checks & builds Vite SPA, installs Playwright Chromium, executes all 15 E2E browser tests with report artifact upload on failure.
+      - `docker-build`: Multi-stage Dockerfile build validation (`docker build`) ensuring deployable container images.
+    - Updated `frontend/playwright.config.ts` with CI-aware reporter and browser channel fallback.
