@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: linksaver-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: linksaver
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - asex2006:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d linksaver"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linksaver-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/linksaver
+      BHAPI_TOKEN: ${BHAPI_TOKEN:-}
+      BHAPI_BASE_URL: ${BHAPI_BASE_URL:-https://bhapi.ru}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  asex2006:
+    name: asex2006

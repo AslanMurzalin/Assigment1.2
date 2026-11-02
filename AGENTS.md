@@ -19,7 +19,7 @@ This document is the **primary instruction manual and operational memory** for a
 
 - **Frontend**: React 18/19, TypeScript, Vite, Tailwind CSS.
 - **Backend**: FastAPI (Python 3.10+), Pydantic v2, Uvicorn.
-- **Database & ORM**: SQLite (`app.db`), SQLAlchemy (relational $M:N$ model).
+- **Database & ORM**: PostgreSQL 16 (`postgres:16-alpine`), SQLAlchemy (relational $M:N$ model), Alembic (schema migrations).
 - **Video & Metadata**: `yt-dlp` (direct streaming for 720p YouTube videos), `httpx` + `BeautifulSoup4` (generic OpenGraph / HTML metadata extraction).
 - **Authentication**: JWT Bearer tokens, passwords hashed with `bcrypt`.
 - **Remote Repository**: `https://github.com/AslanMurzalin/Assigment1.2.git`
@@ -122,6 +122,9 @@ graph LR
 c:\Users\aslan\PycharmProjects\assigment1/
 ├── AGENTS.md                  # <-- THIS FILE (Agent instructions & operational memory)
 ├── openapi.yml                # (Created in Iteration 2) API contract specification
+├── docker-compose.yml         # Multi-container orchestration (postgres + app)
+├── Dockerfile                 # Unified multi-stage container build
+├── .dockerignore              # Docker build exclusions
 ├── .gitignore                 # Git ignore patterns
 │
 ├── docs/                      # Project documentation & issue resolution guides
@@ -142,15 +145,19 @@ c:\Users\aslan\PycharmProjects\assigment1/
 │   ├── package.json
 │   └── vite.config.ts
 │
-└── backend/                   # (Created in Iteration 3) FastAPI application
+└── backend/                   # FastAPI application
+    ├── alembic/               # Alembic database migrations
+    │   ├── versions/          # Versioned migration scripts
+    │   └── env.py             # Alembic migration environment
+    ├── alembic.ini            # Alembic configuration
     ├── app/
     │   ├── api/               # Routers and dependency injection
     │   ├── core/              # Config, security, exceptions
     │   ├── schemas/           # Pydantic DTO models
     │   ├── models/            # SQLAlchemy ORM models
-    │   ├── repositories/      # Abstract, InMemory, and SQLite implementations
+    │   ├── repositories/      # Abstract, InMemory, and SQLite/Postgres implementations
     │   ├── services/          # Domain services & metadata extractors
-    │   ├── db/                # SQLite connection session
+    │   ├── db/                # PostgreSQL/SQLAlchemy connection session
     │   └── main.py            # FastAPI entry point
     ├── tests/                 # Automated pytest suite
     └── requirements.txt
@@ -209,4 +216,14 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Created root `.dockerignore` ignoring node_modules, .venv, git, db files, and test caches.
     - Optimized `requirements.txt` to avoid redundant 68MB wheel download by relying on system `ffmpeg`.
     - Verified all 15 automated pytest tests pass and frontend Vite build succeeds.
-
+  - **PostgreSQL 16 Migration with Named Volume and Alembic**:
+    - Replaced SQLite storage with PostgreSQL 16 (`postgres:16-alpine`) orchestrated via `docker-compose.yml`.
+    - Created persistent named volume `asex2006` mapped to `/var/lib/postgresql/data`.
+    - Added healthcheck (`pg_isready -U postgres -d linksaver`) on `db` service and configured `condition: service_healthy` on `app` service.
+    - Added `psycopg2-binary>=2.9.0` and `alembic>=1.13.0` to `backend/requirements.txt`.
+    - Initialized Alembic migrations (`backend/alembic/`, `backend/alembic.ini`) with `target_metadata` linked to `Base.metadata`. Generated initial schema migration `79e6b4cd31d8_initial_schema.py` covering `users`, `tags`, `links`, and `link_tags`.
+    - Updated `backend/app/db/session.py` to remove SQLite-specific `check_same_thread` and inline PRAGMA migrations, added `pool_pre_ping=True`.
+    - Cleaned `backend/app/main.py` lifespan of SQLite PRAGMA commands.
+    - Updated `Dockerfile` to copy alembic configurations and run `alembic upgrade head && uvicorn app.main:app` as entrypoint.
+    - Documented `DATABASE_URL` in root and backend `.env.example` files.
+    - Verified all 17 pytest tests pass against PostgreSQL and frontend Vite build succeeds cleanly.

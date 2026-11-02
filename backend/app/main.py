@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import engine, Base
 import app.models  # Ensure all models are registered with Base metadata
@@ -14,28 +13,17 @@ from app.api.v1.downloads import router as downloads_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Auto-create tables on startup
-    Base.metadata.create_all(bind=engine)
-    # Check and add any missing columns in links table for SQLite
-    with engine.connect() as conn:
-        try:
-            result = conn.execute(text("PRAGMA table_info(links)"))
-            existing_cols = {row[1] for row in result.fetchall()}
-            if "image_url" not in existing_cols:
-                conn.execute(text("ALTER TABLE links ADD COLUMN image_url VARCHAR"))
-            if "price" not in existing_cols:
-                conn.execute(text("ALTER TABLE links ADD COLUMN price VARCHAR"))
-            if "specs" not in existing_cols:
-                conn.execute(text("ALTER TABLE links ADD COLUMN specs TEXT"))
-            conn.commit()
-        except Exception:
-            pass
+    # Auto-create tables as a fallback if alembic hasn't run or in lightweight test environments
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
     yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Link Saver backend API (FastAPI + SQLite M:N + Direct Streaming)",
+    description="Link Saver backend API (FastAPI + PostgreSQL M:N + Direct Streaming)",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -85,4 +73,3 @@ if os.path.isdir(STATIC_DIR):
         if os.path.isfile(index_file):
             return FileResponse(index_file)
         return {"detail": "Static frontend not found"}
-

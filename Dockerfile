@@ -24,6 +24,7 @@ WORKDIR /app
 # Install system dependencies:
 # - ffmpeg: audio/video muxing
 # - nodejs: JS runtime for yt-dlp
+# - libpq-dev / gcc if needed, or psycopg2-binary
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     nodejs \
@@ -35,17 +36,16 @@ COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application source code
+# Copy backend application source code & Alembic migration files
 COPY backend/app ./app
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini ./alembic.ini
 
 # Copy built static frontend into FastAPI static assets directory
 COPY --from=frontend-builder /app/frontend/dist ./app/static
 
-# Persistent SQLite directory configuration
-RUN mkdir -p /app/data
-ENV DATABASE_URL="sqlite:////app/data/app.db"
+ENV DATABASE_URL="postgresql+psycopg2://postgres:postgres@db:5432/linksaver"
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
