@@ -248,3 +248,9 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Fixed user email display in `frontend/src/components/common/Navbar.tsx`.
     - Added `backend/tests/conftest.py` fallback configuration for isolated local test runs.
     - Verified all 15 Playwright E2E tests pass and all 17 backend pytest tests pass cleanly.
+  - **Cloud Deployment Strategy & Documentation (`deploy_instruction.md`)**:
+    - Conducted architectural feasibility analysis across Railway, Render, and Vercel.
+    - Identified Railway as the optimal turnkey platform for the unified Docker container (React 19 SPA + FastAPI + FFmpeg + Node.js + managed PostgreSQL with chunked HTTP streaming support).
+    - Documented Render as an alternative Docker host and detailed the Vercel split-architecture approach (Vercel SPA + Railway/Render backend).
+    - Updated `Dockerfile` entrypoint with dynamic port binding (`${PORT:-8000}`) for seamless cloud runtime compatibility.
+    - Generated comprehensive `deploy_instruction.md` guide with environment variable references, step-by-step checklists, and post-deployment validation steps.
