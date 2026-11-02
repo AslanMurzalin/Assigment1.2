@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -65,11 +65,11 @@ if os.path.isdir(STATIC_DIR):
             or full_path.startswith("redoc")
             or full_path == "health"
         ):
-            return {"detail": "Not Found"}
+            raise HTTPException(status_code=404, detail="Not Found")
         target_file = os.path.join(STATIC_DIR, full_path)
         if full_path and os.path.isfile(target_file):
             return FileResponse(target_file)
         index_file = os.path.join(STATIC_DIR, "index.html")
         if os.path.isfile(index_file):
             return FileResponse(index_file)
-        return {"detail": "Static frontend not found"}
+        raise HTTPException(status_code=404, detail="Static frontend not found")

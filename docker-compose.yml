@@ -4,19 +4,27 @@ services:
     container_name: linksaver-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: linksaver
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-linksaver}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - asex2006:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d linksaver"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-linksaver}"]
       interval: 3s
       timeout: 3s
       retries: 10
       start_period: 3s
+    networks:
+      - linksaver-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   app:
     build:
@@ -25,15 +33,34 @@ services:
     container_name: linksaver-app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/linksaver
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-linksaver}
+      SECRET_KEY: ${SECRET_KEY:-link-saver-super-secret-key-for-development-change-in-prod}
       BHAPI_TOKEN: ${BHAPI_TOKEN:-}
       BHAPI_BASE_URL: ${BHAPI_BASE_URL:-https://bhapi.ru}
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - linksaver-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   asex2006:
     name: asex2006
+
+networks:
+  linksaver-network:
+    name: linksaver-network
+    driver: bridge

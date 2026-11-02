@@ -227,3 +227,11 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Updated `Dockerfile` to copy alembic configurations and run `alembic upgrade head && uvicorn app.main:app` as entrypoint.
     - Documented `DATABASE_URL` in root and backend `.env.example` files.
     - Verified all 17 pytest tests pass against PostgreSQL and frontend Vite build succeeds cleanly.
+  - **Full Container Packaging & Docker Compose Orchestration**:
+    - Enhanced `docker-compose.yml` into a fully packaged, self-contained multi-service configuration.
+    - Added dedicated bridge network `linksaver-network` for secure inter-container communication.
+    - Added dual healthchecks: database healthcheck (`pg_isready`) and backend application healthcheck (`urllib.request` on `/health`).
+    - Configured log rotation limits (`json-file`, max-size `10m`, max-file `3`) on all containers.
+    - Parameterized all environment variables (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT`, `APP_PORT`, `SECRET_KEY`, `BHAPI_TOKEN`, `BHAPI_BASE_URL`) with fallback defaults.
+    - Upgraded SPA static handler in `backend/app/main.py` with standard `HTTPException(status_code=404)` for unrecognized routes.
+    - Verified with `docker compose config` and complete 17 automated tests.
