@@ -254,3 +254,8 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Documented Render as an alternative Docker host and detailed the Vercel split-architecture approach (Vercel SPA + Railway/Render backend).
     - Updated `Dockerfile` entrypoint with dynamic port binding (`${PORT:-8000}`) for seamless cloud runtime compatibility.
     - Generated comprehensive `deploy_instruction.md` guide with environment variable references, step-by-step checklists, and post-deployment validation steps.
+  - **Render Deployment Configuration & Database URL Compatibility**:
+    - Created `render.yaml` Blueprint specification defining managed PostgreSQL 16 database (`linksaver-db`) and unified Docker Web Service (`linksaver-app`) with automatic health check at `/health` and env variable bindings.
+    - Added automatic dialect normalization in `backend/app/db/session.py` and `backend/alembic/env.py` converting `postgres://` or `postgresql://` URIs (Render's default format) to `postgresql+psycopg2://` for SQLAlchemy 1.4+ and Alembic compatibility.
+    - Added `RENDER_EXTERNAL_URL` setting and dynamic CORS origin binding in `backend/app/core/config.py` and `backend/app/main.py`.
+    - Verified all 17 backend pytest tests and production Vite build pass cleanly.

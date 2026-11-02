@@ -6,6 +6,17 @@ from app.core.config import settings
 
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
+# Render provides DATABASE_URL as postgres://... which SQLAlchemy 1.4+ doesn't accept.
+# Convert to postgresql+psycopg2:// for compatibility.
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgres://", "postgresql+psycopg2://", 1
+    )
+elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgresql://", "postgresql+psycopg2://", 1
+    )
+
 # SQLite path handling if running in SQLite mode
 connect_args = {}
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):

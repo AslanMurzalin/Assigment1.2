@@ -15,6 +15,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8000",
     ]
+    RENDER_EXTERNAL_URL: str = ""  # Auto-set by Render (e.g. https://linksaver-app.onrender.com)
 
     BHAPI_TOKEN: str = ""
     BHAPI_BASE_URL: str = "https://bhapi.ru"

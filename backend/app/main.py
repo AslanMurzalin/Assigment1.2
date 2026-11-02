@@ -30,10 +30,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration
+# CORS configuration — include Render external URL when deployed
+cors_origins = list(settings.CORS_ORIGINS)
+if settings.RENDER_EXTERNAL_URL:
+    cors_origins.append(settings.RENDER_EXTERNAL_URL)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

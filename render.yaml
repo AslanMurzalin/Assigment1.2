@@ -1,0 +1,30 @@
+# Render Blueprint — deploys Link Saver (React SPA + FastAPI) with PostgreSQL
+# Usage: Dashboard → New Blueprint Instance → connect this repo
+
+databases:
+  - name: linksaver-db
+    databaseName: linksaver
+    user: linksaver
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: linksaver-app
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: linksaver-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BHAPI_TOKEN
+        value: ""
+      - key: BHAPI_BASE_URL
+        value: "https://bhapi.ru"
