@@ -235,3 +235,16 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Parameterized all environment variables (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT`, `APP_PORT`, `SECRET_KEY`, `BHAPI_TOKEN`, `BHAPI_BASE_URL`) with fallback defaults.
     - Upgraded SPA static handler in `backend/app/main.py` with standard `HTTPException(status_code=404)` for unrecognized routes.
     - Verified with `docker compose config` and complete 17 automated tests.
+  - **Playwright E2E Testing Suite**:
+    - Installed `@playwright/test` in `frontend/`.
+    - Configured `frontend/playwright.config.ts` utilizing native Microsoft Edge (`channel: 'msedge'`) avoiding redundant 130MB chromium browser downloads while ensuring Chromium compatibility.
+    - Added npm scripts: `npm run test:e2e` (`playwright test`) and `npm run test:e2e:ui`.
+    - Implemented 15 comprehensive E2E tests in `frontend/e2e/`:
+      - `smoke.spec.ts`: Page title, branding, heading verification.
+      - `auth.spec.ts`: Login form rendering, empty validation errors, invalid credentials alert, switching between Login/Register forms, account creation, successful sign-in, and sign-out.
+      - `links.spec.ts`: Links list rendering with platform badges (YouTube, Ozon, Generic), marketplace price badges, creating new link with tags and notes, real-time search filtering, tag pill filtering, modal note editing, and link deletion with confirmation dialog.
+      - `video-download.spec.ts`: 720p stream download trigger, animated Orange & White filling scale/progress bar, download speed/size, and completion badge.
+    - Fixed UI issue in `frontend/src/context/AuthContext.tsx` where setting global `isLoading` during login/signup unmounted the form and cleared validation error banners.
+    - Fixed user email display in `frontend/src/components/common/Navbar.tsx`.
+    - Added `backend/tests/conftest.py` fallback configuration for isolated local test runs.
+    - Verified all 15 Playwright E2E tests pass and all 17 backend pytest tests pass cleanly.

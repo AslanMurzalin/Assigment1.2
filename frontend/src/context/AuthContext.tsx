@@ -48,10 +48,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
+        setUser(null);
+        setToken(null);
       } finally {
         setIsLoading(false);
       }
     };
+
     initAuth();
 
     return () => {
@@ -60,53 +63,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   }, [authService]);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const resp = await authService.login(email, password);
-      setUser(resp.user);
-      setToken(resp.token);
-    } finally {
-      setIsLoading(false);
-    }
+    const resp = await authService.login(email, password);
+    setUser(resp.user);
+    setToken(resp.token);
   };
 
   const signup = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const resp = await authService.signup(email, password);
-      setUser(resp.user);
-      setToken(resp.token);
-    } finally {
-      setIsLoading(false);
-    }
+    const resp = await authService.signup(email, password);
+    setUser(resp.user);
+    setToken(resp.token);
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
       await authService.logout();
+    } finally {
       setUser(null);
       setToken(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isLoading,
-        isAuthenticated: !!user && !!token,
-        login,
-        signup,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextType = {
+    user,
+    token,
+    isLoading,
+    isAuthenticated: Boolean(user && token),
+    login,
+    signup,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

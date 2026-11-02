@@ -26,9 +26,9 @@ export const Navbar: React.FC = () => {
         {/* User Info & Actions */}
         {user && (
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="hidden xs:flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 text-xs font-medium text-stone-700 border border-stone-200">
-              <UserIcon className="w-3.5 h-3.5 text-stone-400" />
-              <span className="truncate max-w-[140px] sm:max-w-[200px]">{user.email}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 text-xs font-medium text-stone-700 border border-stone-200">
+              <UserIcon className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+              <span className="truncate max-w-[140px] sm:max-w-[200px]" data-testid="user-email">{user.email}</span>
             </div>
 
             <button
@@ -36,9 +36,10 @@ export const Navbar: React.FC = () => {
               type="button"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-100 border border-stone-200 rounded-xl transition"
               title="Sign out of account"
+              aria-label="Logout"
             >
               <LogOut className="w-4 h-4 text-stone-400" />
-              <span className="hidden sm:inline">Logout</span>
+              <span>Logout</span>
             </button>
           </div>
         )}

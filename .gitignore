@@ -49,3 +49,9 @@ yarn-error.log*
 
 # Logs
 *.log
+
+# Playwright Test Artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
