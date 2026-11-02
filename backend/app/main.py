@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import engine, Base
@@ -57,3 +60,29 @@ app.include_router(downloads_router, prefix=settings.API_V1_STR)
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "ok", "version": settings.VERSION}
+
+# Mount static frontend build if directory exists (Single-Container Production Setup)
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if os.path.isdir(STATIC_DIR):
+    assets_dir = os.path.join(STATIC_DIR, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        # Allow API, docs, and OpenAPI routes to be handled by FastAPI
+        if (
+            full_path.startswith("api/")
+            or full_path.startswith("docs")
+            or full_path.startswith("redoc")
+            or full_path == "health"
+        ):
+            return {"detail": "Not Found"}
+        target_file = os.path.join(STATIC_DIR, full_path)
+        if full_path and os.path.isfile(target_file):
+            return FileResponse(target_file)
+        index_file = os.path.join(STATIC_DIR, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        return {"detail": "Static frontend not found"}
+

@@ -1,8 +1,20 @@
+import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import Generator
+from app.core.config import settings
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+
+# Ensure parent directory exists if using a file path in SQLite URL
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite:////"):
+    db_file_path = SQLALCHEMY_DATABASE_URL.replace("sqlite:////", "/")
+    os.makedirs(os.path.dirname(db_file_path), exist_ok=True)
+elif SQLALCHEMY_DATABASE_URL.startswith("sqlite:///"):
+    db_file_path = SQLALCHEMY_DATABASE_URL.replace("sqlite:///", "")
+    db_dir = os.path.dirname(db_file_path)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

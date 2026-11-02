@@ -200,3 +200,13 @@ c:\Users\aslan\PycharmProjects\assigment1/
     - Increased BHAPI client timeout to 30s to allow scraping upstream Ozon responses reliably.
     - Added dedicated automated test `test_bhapi_ozon_v1_docs_format` verifying the official V1 docs schema. All 17 automated tests pass.
   - **All 48 tasks and GitHub issues across all iterations are now 100% complete and closed.**
+  - **Single Dockerfile Setup (Unified Frontend + Backend)**:
+    - Created multi-stage root `Dockerfile`:
+      - **Stage 1 (`frontend-builder`)**: Uses `node:20-alpine`, installs dependencies (`npm ci`), builds static Vite SPA output to `dist`.
+      - **Stage 2 (Runtime)**: Uses `python:3.11-slim`, installs system packages (`ffmpeg`, `nodejs`, `ca-certificates`), installs backend dependencies from `backend/requirements.txt`, copies backend app, copies frontend build to `app/static`.
+    - Added SPA fallback and static mount in `backend/app/main.py` serving static assets at `/assets` and returning `index.html` for client-side routing while keeping `/api/v1/*`, `/docs`, `/redoc`, and `/health` intact.
+    - Updated `frontend/src/api/client.ts` to use relative URLs (`""`) in production builds and `http://localhost:8000` in dev.
+    - Created root `.dockerignore` ignoring node_modules, .venv, git, db files, and test caches.
+    - Optimized `requirements.txt` to avoid redundant 68MB wheel download by relying on system `ffmpeg`.
+    - Verified all 15 automated pytest tests pass and frontend Vite build succeeds.
+
