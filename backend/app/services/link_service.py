@@ -1,8 +1,10 @@
 from typing import List, Optional
+from urllib.parse import urlparse
 from fastapi import HTTPException, status
 from app.repositories.base import AbstractLinkRepository
 from app.schemas.link import LinkCreate, LinkUpdate, LinkRead
 from app.services.extractors.dispatcher import MetadataExtractorService
+from app.core.telemetry import LINKS_CREATED_TOTAL
 
 class LinkService:
     def __init__(self, link_repo: AbstractLinkRepository, extractor: MetadataExtractorService):
@@ -20,7 +22,7 @@ class LinkService:
         # Extract metadata automatically
         metadata = await self.extractor.extract(url_str)
 
-        return await self.link_repo.create(
+        created = await self.link_repo.create(
             user_id=user_id,
             url=url_str,
             title=metadata.title,
@@ -32,6 +34,14 @@ class LinkService:
             price=metadata.price,
             specs=metadata.specs,
         )
+
+        try:
+            domain = urlparse(url_str).netloc.lower() or "unknown"
+            LINKS_CREATED_TOTAL.labels(site_type=str(metadata.site_type), domain=domain).inc()
+        except Exception:
+            pass
+
+        return created
 
     async def list_links(
         self,

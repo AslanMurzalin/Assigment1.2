@@ -1,0 +1,101 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.100.0
+    container_name: linksaver-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8889:8889"   # Prometheus metrics exporter
+    networks:
+      - linksaver-network
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: linksaver-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+    networks:
+      - linksaver-network
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: linksaver-alertmanager
+    restart: unless-stopped
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    depends_on:
+      - ai-responder
+    networks:
+      - linksaver-network
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: linksaver-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/provisioning/dashboards/linksaver_dashboard.json:/var/lib/grafana/dashboards/linksaver_dashboard.json:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - linksaver-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: linksaver-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Web UI
+    networks:
+      - linksaver-network
+
+  ai-responder:
+    build:
+      context: ./ai_oncall_responder
+      dockerfile: Dockerfile
+    container_name: linksaver-ai-responder
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      ENVIRONMENT: "production"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      PROMETHEUS_URL: "http://prometheus:9090"
+      JAEGER_URL: "http://jaeger:16686"
+      APP_BASE_URL: "http://linksaver-app:8000"
+    ports:
+      - "8080:8080"
+    networks:
+      - linksaver-network
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  linksaver-network:
+    name: linksaver-network
+    driver: bridge

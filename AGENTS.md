@@ -266,3 +266,36 @@ c:\Users\aslan\PycharmProjects\assigment1/
       - `frontend-test`: Ubuntu runner with Node 20, type-checks & builds Vite SPA, installs Playwright Chromium, executes all 15 E2E browser tests with report artifact upload on failure.
       - `docker-build`: Multi-stage Dockerfile build validation (`docker build`) ensuring deployable container images.
     - Updated `frontend/playwright.config.ts` with CI-aware reporter and browser channel fallback.
+  - **DevOps & Observability Engineering (Issues #53–#58)**:
+    - **Separate Dev & Prod Environments (Issue #53)**:
+      - `docker-compose.dev.yml`: Live code mounting, hot reloading for FastAPI (`uvicorn --reload`), development logging, isolated `linksaver_dev_db_data` volume.
+      - `docker-compose.prod.yml`: Production multi-stage build, healthchecks, container restart policies, persistent production volume (`linksaver_prod_db_data`), resource constraints (CPU/RAM limits).
+      - Environment templates: `.env.development.example` and `.env.production.example`.
+    - **Manual CI/CD Promotion Trigger (Issue #54)**:
+      - Added `.github/workflows/promote.yml` with `workflow_dispatch` manual trigger.
+      - Includes mandatory operator safety confirmation input (`promote`), pre-promotion automated test execution (backend + frontend + AI responder), and Docker image promotion tagging with audit trail.
+    - **OpenTelemetry & Collector Pipeline (Issue #55)**:
+      - Added OpenTelemetry SDK to backend (`opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-exporter-otlp`, `prometheus-client`).
+      - Created `observability/otel-collector-config.yaml` with OTLP receivers (4317 gRPC, 4318 HTTP), Prometheus exporter (8889), and Jaeger trace exporter.
+      - Integrated Jaeger distributed tracing into the observability stack (`jaegertracing/all-in-one:1.56`).
+    - **Application-Specific Metrics & Grafana Dashboard (Issue #56)**:
+      - Defined domain metrics in `backend/app/core/telemetry.py`:
+        - `linksaver_links_created_total` (labels: `site_type`, `domain`)
+        - `linksaver_extraction_duration_seconds` (histogram: `ozon`, `wildberries`, `aliexpress`, `generic`, `youtube`)
+        - `linksaver_extraction_failures_total` (counter: `extractor_type`, `error_type`)
+        - `linksaver_youtube_downloads_total` (counter: `status`)
+        - `linksaver_youtube_download_duration_seconds` (histogram)
+        - `linksaver_auth_failures_total` (counter)
+        - `linksaver_http_requests_total` and `linksaver_http_request_duration_seconds`
+      - Provisioned Grafana dashboard (`observability/grafana/provisioning/dashboards/linksaver_dashboard.json`) and datasources (`datasources.yml`) with panels for KPIs, marketplace latency, extraction failures, video streaming duration, and 5xx/401 error tracking.
+    - **Metric Change Alerts in Prometheus & Alertmanager (Issue #57)**:
+      - Configured Prometheus alert rules (`observability/prometheus/alert.rules.yml`): `High5xxErrorRate`, `MarketplaceExtractorFailure`, `YouTubeDownloadFailure`, `HighAuthFailureRate`.
+      - Configured Alertmanager (`observability/alertmanager/alertmanager.yml`) forwarding alert webhooks to AI On-Call Responder.
+    - **AI Agent On-Call Responder (Issue #58)**:
+      - Implemented FastAPI microservice in `observability/ai_oncall_responder`:
+        - Endpoint `/webhook/alert` receiving Alertmanager payloads.
+        - Powered by Google Gemini API (`gemini-2.5-flash` via `google-genai` SDK) with autonomous incident triage prompt.
+        - Classifies severity (P1_CRITICAL to P4_LOW), identifies root cause, assesses impact, and returns concrete remediation runbook commands.
+        - Includes resilient rule-based heuristic fallback engine for offline or unauthenticated operations.
+        - Endpoints `/incidents` and `/incidents/{id}` for querying active and past incident reports.
+      - Verified with 27 automated tests passing across backend and AI responder.

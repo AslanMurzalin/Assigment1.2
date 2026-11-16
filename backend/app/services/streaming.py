@@ -4,8 +4,10 @@ import shutil
 import sys
 import os
 import tempfile
+import time
 from typing import AsyncGenerator
 import re
+from app.core.telemetry import YOUTUBE_DOWNLOADS_TOTAL, YOUTUBE_DOWNLOAD_DURATION_SECONDS
 
 
 def get_ytdlp_bin() -> str:
@@ -77,6 +79,7 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
             url,
         ])
 
+        start_time = time.time()
         # Run yt-dlp in a worker thread (blocks until download + merge completes)
         process = await asyncio.to_thread(
             subprocess.run,
@@ -86,7 +89,12 @@ async def stream_youtube_video(url: str) -> AsyncGenerator[bytes, None]:
         )
 
         if process.returncode != 0 or not os.path.exists(tmp_path) or os.path.getsize(tmp_path) == 0:
+            YOUTUBE_DOWNLOADS_TOTAL.labels(status="failure").inc()
             raise RuntimeError("yt-dlp failed to download the video")
+
+        download_duration = time.time() - start_time
+        YOUTUBE_DOWNLOADS_TOTAL.labels(status="success").inc()
+        YOUTUBE_DOWNLOAD_DURATION_SECONDS.observe(download_duration)
 
         # Stream the completed file to client in chunks
         chunk_size = 256 * 1024  # 256 KB chunks

@@ -1,0 +1,50 @@
+groups:
+  - name: linksaver_alerts
+    rules:
+      - alert: High5xxErrorRate
+        expr: sum(rate(linksaver_http_requests_total{status=~"5.."}[2m])) > 0.05 or sum(increase(linksaver_http_requests_total{status=~"5.."}[1m])) > 3
+        for: 30s
+        labels:
+          severity: critical
+          service: linksaver-api
+          component: backend
+        annotations:
+          summary: "High HTTP 5xx error rate detected on Link Saver API"
+          description: "Link Saver backend is returning 5xx server errors at an elevated rate ({{ $value }} errors/sec)."
+          runbook_url: "https://github.com/AslanMurzalin/Assigment1.2/wiki/Runbooks#5xx-errors"
+
+      - alert: MarketplaceExtractorFailure
+        expr: sum(increase(linksaver_extraction_failures_total[2m])) > 2
+        for: 30s
+        labels:
+          severity: warning
+          service: linksaver-extractors
+          component: marketplace-scrapers
+        annotations:
+          summary: "Marketplace product extraction failures detected"
+          description: "E-commerce metadata extraction failed {{ $value }} times in the last 2 minutes for Ozon/WB/AliExpress."
+          runbook_url: "https://github.com/AslanMurzalin/Assigment1.2/wiki/Runbooks#marketplace-extractors"
+
+      - alert: YouTubeDownloadFailure
+        expr: sum(increase(linksaver_youtube_downloads_total{status="failure"}[2m])) > 1
+        for: 15s
+        labels:
+          severity: warning
+          service: linksaver-streaming
+          component: youtube-downloader
+        annotations:
+          summary: "YouTube video download stream failure"
+          description: "Failures occurred while extracting or streaming YouTube 720p video ({{ $value }} failed attempts)."
+          runbook_url: "https://github.com/AslanMurzalin/Assigment1.2/wiki/Runbooks#youtube-streaming"
+
+      - alert: HighAuthFailureRate
+        expr: sum(increase(linksaver_auth_failures_total[2m])) >= 5
+        for: 15s
+        labels:
+          severity: warning
+          service: linksaver-auth
+          component: security
+        annotations:
+          summary: "Elevated authentication failure spike"
+          description: "Multiple failed login attempts ({{ $value }}) detected within 2 minutes. Possible credential stuffing or brute-force."
+          runbook_url: "https://github.com/AslanMurzalin/Assigment1.2/wiki/Runbooks#auth-failures"

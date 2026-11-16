@@ -1,8 +1,10 @@
+import time
 from urllib.parse import urlparse
 from app.services.extractors.base import BaseExtractor, ExtractedMetadata
 from app.services.extractors.youtube import YouTubeExtractor
 from app.services.extractors.generic import GenericExtractor
 from app.services.extractors.marketplace import OzonExtractor, WildberriesExtractor, AliExpressExtractor
+from app.core.telemetry import EXTRACTION_DURATION_SECONDS, EXTRACTION_FAILURES_TOTAL
 
 
 class MetadataExtractorService:
@@ -46,15 +48,35 @@ class MetadataExtractorService:
             return False
 
     async def extract(self, url: str) -> ExtractedMetadata:
+        extractor_type = "generic"
         if self.is_youtube_url(url):
-            return await self.youtube_extractor.extract(url)
-        if self.is_ozon_url(url):
-            return await self.ozon_extractor.extract(url)
-        if self.is_wb_url(url):
-            return await self.wb_extractor.extract(url)
-        if self.is_aliexpress_url(url):
-            return await self.aliexpress_extractor.extract(url)
-        return await self.generic_extractor.extract(url)
+            extractor = self.youtube_extractor
+            extractor_type = "youtube"
+        elif self.is_ozon_url(url):
+            extractor = self.ozon_extractor
+            extractor_type = "ozon"
+        elif self.is_wb_url(url):
+            extractor = self.wb_extractor
+            extractor_type = "wildberries"
+        elif self.is_aliexpress_url(url):
+            extractor = self.aliexpress_extractor
+            extractor_type = "aliexpress"
+        else:
+            extractor = self.generic_extractor
+            extractor_type = "generic"
+
+        start_time = time.time()
+        try:
+            result = await extractor.extract(url)
+            duration = time.time() - start_time
+            EXTRACTION_DURATION_SECONDS.labels(extractor_type=extractor_type).observe(duration)
+            return result
+        except Exception as e:
+            EXTRACTION_FAILURES_TOTAL.labels(
+                extractor_type=extractor_type,
+                error_type=type(e).__name__,
+            ).inc()
+            raise
 
 
 metadata_extractor_service = MetadataExtractorService()

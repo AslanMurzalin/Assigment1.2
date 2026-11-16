@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     BHAPI_TOKEN: str = ""
     BHAPI_BASE_URL: str = "https://bhapi.ru"
 
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://otel-collector:4317"
+    OTEL_SERVICE_NAME: str = "linksaver-api"
+    OTEL_ENABLED: bool = True
+
     model_config = SettingsConfigDict(
         case_sensitive=True,
         env_file=(".env", "backend/.env", "../.env"),

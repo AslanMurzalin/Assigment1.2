@@ -10,6 +10,7 @@ import app.models  # Ensure all models are registered with Base metadata
 from app.api.v1.auth import router as auth_router
 from app.api.v1.links import router as links_router
 from app.api.v1.downloads import router as downloads_router
+from app.core.telemetry import setup_telemetry
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +30,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# OpenTelemetry and Prometheus APM setup
+setup_telemetry(app)
 
 # CORS configuration — include Render external URL when deployed
 cors_origins = list(settings.CORS_ORIGINS)

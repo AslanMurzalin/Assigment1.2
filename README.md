@@ -193,6 +193,71 @@ All 16 tests pass:
 
 ---
 
+## DevOps, Environments & Observability
+
+### 1. Separate Environments (Development vs Production)
+
+Link Saver provides dedicated, isolated Docker Compose environments:
+
+- **Development (`docker-compose.dev.yml`)**:
+  - Live code mounting (`./backend/app:/app/app`) with Uvicorn hot-reload (`--reload`).
+  - Isolated development database volume (`linksaver_dev_db_data`).
+  - Run with:
+    ```bash
+    docker compose -f docker-compose.dev.yml up --build
+    ```
+
+- **Production (`docker-compose.prod.yml`)**:
+  - Multi-stage production build (React SPA bundled into FastAPI static assets).
+  - Production resource limits (CPU & Memory), restart policies, and healthchecks.
+  - Isolated production database volume (`linksaver_prod_db_data`).
+  - Run with:
+    ```bash
+    docker compose -f docker-compose.prod.yml up -d
+    ```
+
+### 2. Manual CI/CD Promotion to Production
+
+A manual promotion gate is implemented via GitHub Actions (`.github/workflows/promote.yml`):
+- Go to **Actions** &rarr; **Promote to Production** &rarr; **Run workflow**.
+- Requires operator confirmation input: type `promote`.
+- Executes pre-promotion test verification (backend tests, frontend build, AI responder tests).
+- Builds, tags, and promotes the production Docker image with an audit log summary.
+
+### 3. OpenTelemetry, Prometheus & Grafana Observability
+
+Launch the complete observability stack (OTel Collector, Prometheus, Grafana, Jaeger, Alertmanager):
+
+```bash
+docker compose -f observability/docker-compose.observability.yml up -d
+```
+
+| Service | Port | Description |
+|---|---|---|
+| **Grafana** | `http://localhost:3000` | Auto-provisioned dashboards (user: `admin`, pass: `admin`) |
+| **Prometheus** | `http://localhost:9090` | Time-series metrics and active alert evaluation |
+| **Jaeger** | `http://localhost:16686` | Distributed traces visualization |
+| **Alertmanager** | `http://localhost:9093` | Alert routing and incident dispatch |
+| **OTel Collector** | `4317 (gRPC) / 4318 (HTTP)` | Unified telemetry receiver |
+| **FastAPI Metrics** | `http://localhost:8000/metrics` | Prometheus-compatible metrics endpoint |
+
+#### Application-Specific Metrics:
+- `linksaver_links_created_total`: Total saved links segmented by `site_type` and `domain`.
+- `linksaver_extraction_duration_seconds`: Histogram measuring metadata scraper latency per platform.
+- `linksaver_extraction_failures_total`: Counter of extraction errors per platform (Ozon, WB, AliExpress, YouTube).
+- `linksaver_youtube_downloads_total` & `linksaver_youtube_download_duration_seconds`: Video stream volume and duration.
+- `linksaver_auth_failures_total`: 401 Unauthorized count for credential stuffing detection.
+
+### 4. AI Agent On-Call Incident Responder
+
+An autonomous AI Incident Responder microservice runs at `http://localhost:8080`:
+- **Webhook Endpoint**: `POST /webhook/alert` receives Alertmanager alerts.
+- **Root Cause Analysis**: Powered by Google Gemini API (`gemini-2.5-flash`), evaluating affected components, probable root cause, customer impact, and step-by-step remediation commands.
+- **Resilient Fallback**: Includes an intelligent heuristic rule engine if offline or when `GEMINI_API_KEY` is omitted.
+- **Incident History**: Query past triaged incidents via `GET /incidents` and `GET /incidents/{incident_id}`.
+
+---
+
 ## License
 
 This project was developed for Assignment 1.2 under the MIT License.
