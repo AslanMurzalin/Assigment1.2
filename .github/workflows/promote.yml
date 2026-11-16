@@ -1,0 +1,106 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment to Promote to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+      release_tag:
+        description: 'Release Tag (e.g., v1.1.0 or prod-YYYYMMDD)'
+        required: true
+        default: 'prod-latest'
+      reason:
+        description: 'Reason for Promotion / Changelog Summary'
+        required: true
+        default: 'Manual promotion after QA verification in development'
+      confirm_promotion:
+        description: 'Type "promote" to confirm production release'
+        required: true
+
+concurrency:
+  group: production-promotion
+  cancel-in-progress: false
+
+jobs:
+  pre-promotion-verification:
+    name: Pre-Promotion Verification & Test Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Confirmation Safety Gate
+        run: |
+          if [ "${{ github.event.inputs.confirm_promotion }}" != "promote" ]; then
+            echo "ERROR: Promotion confirmation failed. Expected 'promote', got '${{ github.event.inputs.confirm_promotion }}'"
+            exit 1
+          fi
+          echo "Promotion confirmation verified by operator: ${{ github.actor }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install system dependencies (ffmpeg & nodejs)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg nodejs
+
+      - name: Install backend dependencies & test
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt pytest
+          pytest backend/tests -v
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies & typecheck/build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+  promote-and-release:
+    name: Promote & Build Production Image
+    runs-on: ubuntu-latest
+    needs: pre-promotion-verification
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Build Production Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: |
+            linksaver:${{ github.event.inputs.release_tag }}
+            linksaver:prod
+            linksaver:latest
+
+      - name: Generate Promotion Audit Log & Summary
+        run: |
+          echo "### 🚀 Production Promotion Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target Environment**: \`${{ github.event.inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Tag**: \`${{ github.event.inputs.release_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered By**: \`${{ github.actor }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Commit SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Promotion Reason**: ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Verification tests passed & production artifacts successfully tagged" >> $GITHUB_STEP_SUMMARY
