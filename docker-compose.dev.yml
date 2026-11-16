@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: linksaver-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-linksaver_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - linksaver_dev_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-linksaver_dev}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks:
+      - linksaver-dev-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: linksaver-backend-dev
+    restart: unless-stopped
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      ENV: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-linksaver_dev}
+      SECRET_KEY: ${SECRET_KEY:-dev-insecure-secret-key-change-me-12345}
+      BHAPI_TOKEN: ${BHAPI_TOKEN:-}
+      BHAPI_BASE_URL: ${BHAPI_BASE_URL:-https://bhapi.ru}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_SERVICE_NAME: linksaver-backend-dev
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/alembic:/app/alembic:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - linksaver-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  linksaver_dev_db_data:
+    name: linksaver_dev_db_data
+
+networks:
+  linksaver-dev-network:
+    name: linksaver-dev-network
+    driver: bridge

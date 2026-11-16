@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: linksaver-db-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-linksaver_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in production}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - linksaver_prod_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-linksaver_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - linksaver-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.2"
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${PROD_IMAGE:-linksaver:prod}
+    container_name: linksaver-app-prod
+    restart: always
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      ENV: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-linksaver_prod}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required in production}
+      BHAPI_TOKEN: ${BHAPI_TOKEN:-}
+      BHAPI_BASE_URL: ${BHAPI_BASE_URL:-https://bhapi.ru}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_SERVICE_NAME: linksaver-app-prod
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - linksaver-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+        reservations:
+          cpus: "0.25"
+          memory: 384M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  linksaver_prod_db_data:
+    name: linksaver_prod_db_data
+
+networks:
+  linksaver-prod-network:
+    name: linksaver-prod-network
+    driver: bridge
